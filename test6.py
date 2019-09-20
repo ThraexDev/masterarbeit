@@ -46,7 +46,7 @@ def evaluate(model):
         while gameResult == 'pass':
             gameState = playerState[currentPlayer % 2] + playerState[(currentPlayer + 1) % 2]
             action = -1
-            if currentPlayer % 2 == 1:
+            if currentPlayer % 2 == 0:
                 prediction = model.predict_on_batch(np.array([gameState])).numpy()[0]
                 while checkViolation(playerState[0], playerState[1], np.argmax(prediction)):
                     prediction[np.argmax(prediction)] = -1
@@ -77,7 +77,7 @@ def evaluate(model):
             gameResult = calculateGameState(playerState[currentPlayer % 2],
                                                  playerState[(currentPlayer + 1) % 2])
             if gameResult == 'player1won':
-                if currentPlayer % 2 == 1:
+                if currentPlayer % 2 == 0:
                     wongames = wongames + 1
             if gameResult == 'stalemate':
                 stalegames = stalegames + 1
@@ -88,7 +88,7 @@ def evaluate(model):
 oldmodellist = [makenewmodel()]
 model = makenewmodel()
 
-for turnnumber in range(0, 100000):
+for turnnumber in range(0, 20000):
     print(str(turnnumber)+'/100000')
     trainmodel = False
     currentoldmodel = len(oldmodellist) -1
@@ -127,7 +127,8 @@ for turnnumber in range(0, 100000):
                     currentoldmodel = currentoldmodel - 1
                     if currentoldmodel == -1:
                         oldmodellist.append(model)
-                        evaluate(model)
+                        if nnposition == 0:
+                            evaluate(model)
                         model.save_weights('testmodel')
                         model = makenewmodel()
                         trainmodel = True
@@ -151,7 +152,8 @@ for turnnumber in range(0, 100000):
                     currentoldmodel = currentoldmodel - 1
                     if currentoldmodel == -1:
                         oldmodellist.append(model)
-                        #evaluate(model)
+                        if nnposition == 0:
+                            evaluate(model)
                         model.save_weights('testmodel')
                         model = makenewmodel()
                         trainmodel = True
