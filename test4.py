@@ -6,12 +6,13 @@ import matplotlib.pyplot as plt
 from operator import add
 
 model = tf.keras.models.Sequential([
-  tf.keras.layers.Dense(72, activation=tf.nn.relu, input_shape=(18,)),
-  tf.keras.layers.Dense(36, activation=tf.nn.relu),
-  tf.keras.layers.Dense(9, activation=tf.nn.softmax)
+  tf.keras.layers.Dense(72, activation=tf.nn.tanh, input_shape=(18,)),
+  tf.keras.layers.Dense(200, activation=tf.nn.tanh),
+  tf.keras.layers.Dense(36, activation=tf.nn.tanh),
+  tf.keras.layers.Dense(9, activation=tf.nn.tanh)
 ])
 
-model.compile(optimizer='adam',
+model.compile(optimizer=tf.compat.v1.train.AdamOptimizer(learning_rate=0.00001),
               loss=tf.compat.v2.losses.mean_absolute_error,
               metrics=['accuracy'])
 
@@ -24,7 +25,7 @@ class GameStateGenerator(tf.compat.v2.keras.utils.Sequence):
         self.model = tfmodel
 
     def __len__(self):
-        return 100000
+        return 30000
 
     def calculateGameState(self, playerState1, playerState2):
         if (playerState1[0] == 1 and playerState1[1] and playerState1[2] == 1) or (playerState1[3] == 1 and playerState1[4] and playerState1[5] == 1) or (playerState1[6] == 1 and playerState1[7] and playerState1[8] == 1) or (playerState1[0] == 1 and playerState1[3] and playerState1[6] == 1) or (playerState1[1] == 1 and playerState1[4] and playerState1[7] == 1) or (playerState1[2] == 1 and playerState1[5] and playerState1[8] == 1) or (playerState1[0] == 1 and playerState1[4] and playerState1[8] == 1) or (playerState1[2] == 1 and playerState1[4] and playerState1[6] == 1):
@@ -39,10 +40,10 @@ class GameStateGenerator(tf.compat.v2.keras.utils.Sequence):
         return False
 
     def __getitem__(self, item):
-        if item % 1000 == 0:
+        if item % 10 == 0:
             wongames = 0
             stalegames = 0
-            for i in range(0, 100):
+            for i in range(0, 10):
                 playerState = [[0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0]]
                 currentPlayer = 0
                 gameResult = self.calculateGameState(playerState[currentPlayer % 2], playerState[(currentPlayer + 1) % 2])
@@ -50,7 +51,7 @@ class GameStateGenerator(tf.compat.v2.keras.utils.Sequence):
                     gameState = playerState[currentPlayer % 2] + playerState[(currentPlayer+1) % 2]
                     action = -1
                     if currentPlayer % 2 == 0:
-                        prediction = self.model.predict_on_batch(np.array([gameState])).numpy()[0]
+                        prediction = self.model.predict_on_batch(np.array([gameState]))[0]
                         while self.checkViolation(playerState[0], playerState[1], np.argmax(prediction)):
                             prediction[np.argmax(prediction)] = -1
                         action = np.argmax(prediction)
@@ -94,7 +95,7 @@ class GameStateGenerator(tf.compat.v2.keras.utils.Sequence):
         gameResult = self.calculateGameState(playerState[currentPlayer % 2], playerState[(currentPlayer+1) % 2])
         while gameResult == 'pass':
             gameState = playerState[currentPlayer % 2] + playerState[(currentPlayer+1) % 2]
-            prediction = self.model.predict_on_batch(np.array([gameState])).numpy()[0]
+            prediction = self.model.predict_on_batch(np.array([gameState]))[0]
             while self.checkViolation(playerState[0], playerState[1], np.argmax(prediction)):
                 prediction[np.argmax(prediction)] = -1
             action = np.argmax(prediction)
@@ -111,13 +112,21 @@ class GameStateGenerator(tf.compat.v2.keras.utils.Sequence):
                 for i in range(0,len(labels[(currentPlayer+1) % 2])):
                     for j in range(0, len(labels[(currentPlayer+1) % 2][i])):
                         if labels[(currentPlayer+1) % 2][i][j] == 1:
-                            labels[(currentPlayer + 1) % 2][i][j] = 0
+                            labels[(currentPlayer + 1) % 2][i][j] = -1
+                        if labels[(currentPlayer+1) % 2][i][j] == 0:
+                            labels[(currentPlayer + 1) % 2][i][j] = 1
                 print('Player '+str( (currentPlayer+1) % 2) + ' lost ')
             if gameResult == 'stalemate':
                 for i in range(0,len(labels[(currentPlayer) % 2])):
                     for j in range(0, len(labels[(currentPlayer) % 2][i])):
                         if labels[(currentPlayer) % 2][i][j] == 1:
-                            labels[(currentPlayer) % 2][i][j] = 0
+                            labels[(currentPlayer) % 2][i][j] = -1
+                        if labels[(currentPlayer) % 2][i][j] == 0:
+                            labels[(currentPlayer) % 2][i][j] = 1
+                for i in range(0,len(labels[(currentPlayer + 1) % 2])):
+                    for j in range(0, len(labels[(currentPlayer +1) % 2][i])):
+                        if labels[(currentPlayer+1) % 2][i][j] == 1:
+                            labels[(currentPlayer+1) % 2][i][j] = 1
             currentPlayer = currentPlayer + 1
         exportData = data[0]
         exportData.extend(data[1])
@@ -150,7 +159,7 @@ for i, x in enumerate(wonandstale, 1):
         moving_ave = (cumsum[i] - cumsum[i-N])/N
         moving_aves_stale_and_won.append(moving_ave)
 x = list(range(0,len(moving_aves_won)))
-plt.ylim(top=100)
+plt.ylim(top=10)
 plt.ylim(bottom=0)
 plt.ylabel('win rate against base line ai in %')
 plt.xlabel('iteration (in 10)')
