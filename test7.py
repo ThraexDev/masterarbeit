@@ -4,11 +4,14 @@ import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
 from operator import add
+import datetime
+import time
 
 
 def makenewmodel():
     model = tf.keras.models.Sequential([
-        tf.keras.layers.Dense(72, activation=tf.nn.tanh, input_shape=(18,)),
+        tf.keras.layers.Dense(100, activation=tf.nn.tanh, input_shape=(18,)),
+        tf.keras.layers.Dense(27, activation=tf.nn.tanh),
         tf.keras.layers.Dense(9, activation=tf.nn.tanh)
     ])
 
@@ -33,7 +36,7 @@ def checkViolation(playerState1, playerState2, action):
 
 historywon = []
 historystale = []
-
+xvalue = []
 
 def evaluate(model):
     wongames = 0
@@ -45,7 +48,7 @@ def evaluate(model):
         while gameResult == 'pass':
             gameState = playerState[currentPlayer % 2] + playerState[(currentPlayer + 1) % 2]
             action = -1
-            if currentPlayer % 2 == 1:
+            if currentPlayer % 2 == 0:
                 prediction = model.predict_on_batch(np.array([gameState])).numpy()[0]
                 while checkViolation(playerState[0], playerState[1], np.argmax(prediction)):
                     prediction[np.argmax(prediction)] = -1
@@ -76,7 +79,7 @@ def evaluate(model):
             gameResult = calculateGameState(playerState[currentPlayer % 2],
                                                  playerState[(currentPlayer + 1) % 2])
             if gameResult == 'player1won':
-                if currentPlayer % 2 == 1:
+                if currentPlayer % 2 == 0:
                     wongames = wongames + 1
             if gameResult == 'stalemate':
                 stalegames = stalegames + 1
@@ -86,11 +89,11 @@ def evaluate(model):
 
 oldmodellist = [makenewmodel()]
 model = makenewmodel()
-
+startoldmodel = len(oldmodellist) -1
 for turnnumber in range(0, 200000):
-    print(str(turnnumber)+'/100000')
+    #print(str(turnnumber)+'/200000')
     trainmodel = False
-    currentoldmodel = len(oldmodellist) -1
+    currentoldmodel = startoldmodel
     exportData = []
     exportLabels = []
     nnposition = len(oldmodellist) % 2
@@ -100,7 +103,7 @@ for turnnumber in range(0, 200000):
         playerState = [[0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0]]
         currentPlayer = 0
         gameResult = calculateGameState(playerState[currentPlayer % 2], playerState[(currentPlayer+1) % 2])
-        print('Spieler ' + str(len(oldmodellist)) + ' gegen ' + str(currentoldmodel))
+        #print('Spieler ' + str(len(oldmodellist)) + ' gegen ' + str(currentoldmodel))
         while gameResult == 'pass':
             gameState = playerState[currentPlayer % 2] + playerState[(currentPlayer+1) % 2]
             if currentPlayer % 2 == nnposition:
@@ -122,57 +125,67 @@ for turnnumber in range(0, 200000):
             gameResult = calculateGameState(playerState[currentPlayer % 2], playerState[(currentPlayer + 1) % 2])
             if gameResult == 'player1won':
                 if currentPlayer % 2 == nnposition:
-                    print('won')
                     currentoldmodel = currentoldmodel - 1
-                    if currentoldmodel == -1:
-                        oldmodellist.append(model)
-                        if nnposition == 1:
-                            evaluate(model)
-                        model.save_weights('testmodel')
-                        model = makenewmodel()
+                    if startoldmodel == len(oldmodellist) - 1:
+                        if currentoldmodel == -1:
+                            trainmodel = True
+                            oldmodellist.append(model)
+                            if nnposition == 0:
+                                evaluate(model)
+                                xvalue.append(turnnumber)
+                            model.save_weights('testmodel')
+                            model = makenewmodel()
+                            startoldmodel = len(oldmodellist) - 1
+                            ts = time.time()
+                            st = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+                            print('Model: ' + str(len(oldmodellist)) + ' Time: ' + st + ' Turn: ' + str(turnnumber))
+                    else:
                         trainmodel = True
+                        startoldmodel = len(oldmodellist) -1
                 else:
                     trainmodel = True
-                    print('lost')
+                    startoldmodel = currentoldmodel
                     for i in range(0, len(labels)):
                         for j in range(0, len(labels[i])):
                             if labels[i][j] == 1:
                                 labels[i][j] = -1
             if gameResult == 'stalemate':
-                print('stalemate')
-                print(currentPlayer)
                 if nnposition == 0:
                     trainmodel = True
+                    startoldmodel = currentoldmodel
                     for i in range(0, len(labels)):
                         for j in range(0, len(labels[i])):
                             if labels[i][j] == 1:
                                 labels[i][j] = -1
                 else:
                     currentoldmodel = currentoldmodel - 1
-                    if currentoldmodel == -1:
-                        oldmodellist.append(model)
-                        if nnposition == 1:
-                            evaluate(model)
-                        model.save_weights('testmodel')
-                        model = makenewmodel()
+                    if startoldmodel == len(oldmodellist) - 1:
+                        if currentoldmodel == -1:
+                            trainmodel = True
+                            oldmodellist.append(model)
+                            if nnposition == 0:
+                                evaluate(model)
+                                xvalue.append(turnnumber)
+                            model.save_weights('testmodel')
+                            model = makenewmodel()
+                            startoldmodel = len(oldmodellist) - 1
+                            ts = time.time()
+                            st = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+                            print('Model: ' + str(len(oldmodellist)) + ' Time: ' + st + ' Turn: ' + str(turnnumber))
+                    else:
                         trainmodel = True
+                        startoldmodel = len(oldmodellist) -1
             currentPlayer = currentPlayer + 1
         exportData.extend(data)
         exportLabels.extend(labels)
-    print(exportData)
-    print(exportLabels)
-    while len(exportData) > 7:
-        rand = random.randint(0, len(exportData)-5)
-        del exportData[rand]
-        del exportLabels[rand]
-    print(model.train_on_batch(np.array(exportData), np.array(exportLabels)))
+    model.train_on_batch(np.array(exportData), np.array(exportLabels))
 
 wonandstale = list( map(add, historywon, historystale))
 x = list(range(0,len(historywon)))
 plt.ylim(top=100)
 plt.ylim(bottom=0)
 plt.ylabel('win rate against base line ai in %')
-plt.xlabel('iteration (in 10)')
+plt.xlabel('iteration')
 plt.plot(x, historywon, color='green', label='win rate')
 plt.plot(x, historystale, color='blue', label='stalemate rate')
 plt.plot(x, wonandstale, color='red', label='combined win and stalemate rate')
