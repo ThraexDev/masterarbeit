@@ -26,7 +26,7 @@ class GameStateGenerator(tf.compat.v2.keras.utils.Sequence):
         self.model = tfmodel
 
     def __len__(self):
-        return 60000
+        return 10000
 
     def calculatebulls(self, batch):
         bulls = 0
@@ -66,167 +66,185 @@ class GameStateGenerator(tf.compat.v2.keras.utils.Sequence):
         cardamount = 104
         playeramount = 4
         ################################################################################################################
-        if item % 1000 == 0 or item == 0:
+        if item % 100 == 0 or item == 0:
             wongames = 0
             for testgame in range(0, 100):
-                batch = []
-                cardshandedout = []
-                playercards = []
                 playerbulls = []
-                playedcards = [0] * cardamount
                 for playernumber in range(0, playeramount):
                     playerbulls.append(0)
-                    playercards.append([0] * cardamount)
-                    for cardnumber in range(0, cardshandedtoeachplayer):
+                gamefinished = False
+                while not gamefinished:
+                    batch = []
+                    cardshandedout = []
+                    playercards = []
+                    playedcards = [0] * cardamount
+                    for playernumber in range(0, playeramount):
+                        playercards.append([0] * cardamount)
+                        for cardnumber in range(0, cardshandedtoeachplayer):
+                            cardnotset = True
+                            while cardnotset:
+                                randomcard = random.randint(1, cardamount)
+                                if randomcard not in cardshandedout:
+                                    playercards[playernumber][randomcard - 1] = 1
+                                    cardshandedout.append(randomcard)
+                                    cardnotset = False
+                    for batchnumber in range(0, amountofbatches):
+                        batch.append([])
                         cardnotset = True
                         while cardnotset:
                             randomcard = random.randint(1, cardamount)
                             if randomcard not in cardshandedout:
-                                playercards[playernumber][randomcard - 1] = 1
+                                playedcards[randomcard - 1] = 1
+                                batch[batchnumber].append(randomcard)
                                 cardshandedout.append(randomcard)
                                 cardnotset = False
-                for batchnumber in range(0, amountofbatches):
-                    batch.append([])
-                    cardnotset = True
-                    while cardnotset:
-                        randomcard = random.randint(1, cardamount)
-                        if randomcard not in cardshandedout:
-                            playedcards[randomcard - 1] = 1
-                            batch[batchnumber].append(randomcard)
-                            cardshandedout.append(randomcard)
-                            cardnotset = False
-                for cardnumber in range(0, cardshandedtoeachplayer):
-                    selectedcards = []
-                    selectedbatches = []
-                    for playernumber in range(0, playeramount):
-                        selectedcard = 0
-                        selectedbatch = 0
-                        if playernumber == 0:
-                            cardsonhandsvector = playercards[playernumber]
-                            situtationvector = self.getplayersituationvector(cardsonhandsvector, batch, playedcards)
-                            prediction = model.predict_on_batch(
-                                {'input': np.array([situtationvector]), 'allow': np.array([cardsonhandsvector]).astype(float)})
-                            cardpredicion = prediction[0].numpy()
-                            batchpredicion = prediction[1].numpy()
-                            selectedcard = np.argmax(cardpredicion)
-                            selectedbatch = np.argmax(batchpredicion)
-                        else:
-                            indices = [i for i, x in enumerate(playercards[playernumber]) if x == 1]
-                            randomcard = random.randint(0, len(indices)-1)
-                            selectedcard = indices[randomcard]
-                            selectedbatch = random.randint(0, amountofbatches-1)
-                        # ist nötig, da die vektoren nullbasiert sind
-                        selectedcard = selectedcard + 1
-                        #############################################
-                        selectedcards.append(selectedcard)
-                        selectedbatches.append(selectedbatch)
-                    highestcardinbatches = []
-                    for batchnumber in range(0, amountofbatches):
-                        highestcardinbatches.append(max(batch[batchnumber]))
-                    for playernumber in range(1, playeramount):
-                        lowestcard = min(selectedcards)
-                        playedcards[lowestcard] = 1
-                        playeroflowestcard = np.argmin(selectedcards)
-                        playercards[playeroflowestcard][lowestcard - 1] = 0
-                        differencetocard = [lowestcard - highcardofbatch for highcardofbatch in highestcardinbatches]
-                        if max(differencetocard) < 0:
-                            playerbulls[playeroflowestcard] = playerbulls[playeroflowestcard] + self.calculatebulls(
-                                batch[selectedbatches[playeroflowestcard]])
-                            batch[selectedbatches[playeroflowestcard]] = [lowestcard]
-                            continue
-                        for difference in range(0, len(differencetocard)):
-                            if differencetocard[difference] < 0:
-                                differencetocard[difference] = 105
-                        assingedbatch = np.argmin(differencetocard)
-                        if len(batch[assingedbatch]) == 5:
-                            playerbulls[playeroflowestcard] = playerbulls[playeroflowestcard] + self.calculatebulls(
-                                batch[assingedbatch])
-                            batch[assingedbatch] = [lowestcard]
-                        else:
-                            batch[assingedbatch].append(lowestcard)
-                        selectedcards[playeroflowestcard] = 105
+                    for cardnumber in range(0, cardshandedtoeachplayer):
+                        selectedcards = []
+                        selectedbatches = []
+                        for playernumber in range(0, playeramount):
+                            selectedcard = 0
+                            selectedbatch = 0
+                            if playernumber == 0:
+                                cardsonhandsvector = playercards[playernumber]
+                                situtationvector = self.getplayersituationvector(cardsonhandsvector, batch, playedcards)
+                                prediction = model.predict_on_batch(
+                                    {'input': np.array([situtationvector]), 'allow': np.array([cardsonhandsvector]).astype(float)})
+                                cardpredicion = prediction[0].numpy()
+                                batchpredicion = prediction[1].numpy()
+                                selectedcard = np.argmax(cardpredicion)
+                                selectedbatch = np.argmax(batchpredicion)
+                            else:
+                                indices = [i for i, x in enumerate(playercards[playernumber]) if x == 1]
+                                randomcard = random.randint(0, len(indices)-1)
+                                selectedcard = indices[randomcard]
+                                selectedbatch = random.randint(0, amountofbatches-1)
+                            # ist nötig, da die vektoren nullbasiert sind
+                            selectedcard = selectedcard + 1
+                            #############################################
+                            selectedcards.append(selectedcard)
+                            selectedbatches.append(selectedbatch)
+                        highestcardinbatches = []
+                        for batchnumber in range(0, amountofbatches):
+                            highestcardinbatches.append(max(batch[batchnumber]))
+                        for playernumber in range(1, playeramount):
+                            lowestcard = min(selectedcards)
+                            playedcards[lowestcard] = 1
+                            playeroflowestcard = np.argmin(selectedcards)
+                            playercards[playeroflowestcard][lowestcard - 1] = 0
+                            differencetocard = [lowestcard - highcardofbatch for highcardofbatch in highestcardinbatches]
+                            if max(differencetocard) < 0:
+                                playerbulls[playeroflowestcard] = playerbulls[playeroflowestcard] + self.calculatebulls(
+                                    batch[selectedbatches[playeroflowestcard]])
+                                batch[selectedbatches[playeroflowestcard]] = [lowestcard]
+                                if np.argmax(playerbulls) <= 100:
+                                    gamefinished = True
+                                    break
+                                continue
+                            for difference in range(0, len(differencetocard)):
+                                if differencetocard[difference] < 0:
+                                    differencetocard[difference] = 105
+                            assingedbatch = np.argmin(differencetocard)
+                            if len(batch[assingedbatch]) == 5:
+                                playerbulls[playeroflowestcard] = playerbulls[playeroflowestcard] + self.calculatebulls(
+                                    batch[assingedbatch])
+                                batch[assingedbatch] = [lowestcard]
+                                if np.argmax(playerbulls) <= 100:
+                                    gamefinished = True
+                                    break
+                            else:
+                                batch[assingedbatch].append(lowestcard)
+                            selectedcards[playeroflowestcard] = 105
                 bestplayer = np.argmin(playerbulls)
                 if bestplayer == 0:
                     wongames = wongames + 1
             historywon.append(wongames)
         ################################################################################################################
-        batch = []
-        cardshandedout = []
-        playercards = []
         playertargetvectors = []
         playerinputvectors = []
         playerbulls = []
-        playedcards = [0] * cardamount
         for playernumber in range(0, playeramount):
             playerbulls.append(0)
-            playercards.append([0]*cardamount)
             playertargetvectors.append([[], []])
             playerinputvectors.append([[], []])
-            for cardnumber in range(0, cardshandedtoeachplayer):
+        gamefinished = False
+        while not gamefinished:
+            batch = []
+            cardshandedout = []
+            playercards = []
+            playedcards = [0] * cardamount
+            for playernumber in range(0, playeramount):
+                playercards.append([0]*cardamount)
+                for cardnumber in range(0, cardshandedtoeachplayer):
+                    cardnotset = True
+                    while cardnotset:
+                        randomcard = random.randint(1, cardamount)
+                        if randomcard not in cardshandedout:
+                            playercards[playernumber][randomcard-1] = 1
+                            cardshandedout.append(randomcard)
+                            cardnotset = False
+            for batchnumber in range(0, amountofbatches):
+                batch.append([])
                 cardnotset = True
                 while cardnotset:
                     randomcard = random.randint(1, cardamount)
                     if randomcard not in cardshandedout:
-                        playercards[playernumber][randomcard-1] = 1
+                        playedcards[randomcard - 1] = 1
+                        batch[batchnumber].append(randomcard)
                         cardshandedout.append(randomcard)
                         cardnotset = False
-        for batchnumber in range(0, amountofbatches):
-            batch.append([])
-            cardnotset = True
-            while cardnotset:
-                randomcard = random.randint(1, cardamount)
-                if randomcard not in cardshandedout:
-                    playedcards[randomcard - 1] = 1
-                    batch[batchnumber].append(randomcard)
-                    cardshandedout.append(randomcard)
-                    cardnotset = False
-        for cardnumber in range(0, cardshandedtoeachplayer):
-            selectedcards = []
-            selectedbatches = []
-            for playernumber in range(0, playeramount):
-                cardsonhandsvector = playercards[playernumber]
-                situtationvector = self.getplayersituationvector(cardsonhandsvector, batch, playedcards)
-                prediction = model.predict_on_batch({'input': np.array([situtationvector]), 'allow': np.array([cardsonhandsvector]).astype(float)})
-                cardpredicion = prediction[0].numpy()
-                batchpredicion = prediction[1].numpy()
-                selectedcard = np.argmax(cardpredicion)
-                selectedbatch = np.argmax(batchpredicion)
-                cardtargetvector = [0] * cardamount
-                batchtargetvector = [0] * amountofbatches
-                playerinputvectors[playernumber][0].append(situtationvector)
-                playerinputvectors[playernumber][1].append(cardsonhandsvector)
-                cardtargetvector[selectedcard] = -1
-                playertargetvectors[playernumber][0].append(cardtargetvector)
-                batchtargetvector[selectedbatch] = -1
-                playertargetvectors[playernumber][1].append(batchtargetvector)
-                # ist nötig, da die vektoren nullbasiert sind
-                selectedcard = selectedcard + 1
-                #############################################
-                selectedcards.append(selectedcard)
-                selectedbatches.append(selectedbatch)
-            highestcardinbatches = []
-            for batchnumber in range(0, amountofbatches):
-                highestcardinbatches.append(max(batch[batchnumber]))
-            for playernumber in range(1, playeramount):
-                lowestcard = min(selectedcards)
-                playedcards[lowestcard] = 1
-                playeroflowestcard = np.argmin(selectedcards)
-                differencetocard = [lowestcard - highcardofbatch for highcardofbatch in highestcardinbatches]
-                playercards[playeroflowestcard][lowestcard-1] = 0
-                if max(differencetocard) < 0:
-                    playerbulls[playeroflowestcard] = playerbulls[playeroflowestcard] + self.calculatebulls(batch[selectedbatches[playeroflowestcard]])
-                    batch[selectedbatches[playeroflowestcard]] = [lowestcard]
-                    continue
-                for difference in range(0, len(differencetocard)):
-                    if differencetocard[difference] < 0:
-                        differencetocard[difference] = 105
-                assingedbatch = np.argmin(differencetocard)
-                if len(batch[assingedbatch]) == 5:
-                    playerbulls[playeroflowestcard] = playerbulls[playeroflowestcard] + self.calculatebulls(batch[assingedbatch])
-                    batch[assingedbatch] = [lowestcard]
-                else:
-                    batch[assingedbatch].append(lowestcard)
-                selectedcards[playeroflowestcard] = 105
+            for cardnumber in range(0, cardshandedtoeachplayer):
+                selectedcards = []
+                selectedbatches = []
+                for playernumber in range(0, playeramount):
+                    cardsonhandsvector = playercards[playernumber]
+                    situtationvector = self.getplayersituationvector(cardsonhandsvector, batch, playedcards)
+                    prediction = model.predict_on_batch({'input': np.array([situtationvector]), 'allow': np.array([cardsonhandsvector]).astype(float)})
+                    cardpredicion = prediction[0].numpy()
+                    batchpredicion = prediction[1].numpy()
+                    selectedcard = np.argmax(cardpredicion)
+                    selectedbatch = np.argmax(batchpredicion)
+                    cardtargetvector = [0] * cardamount
+                    batchtargetvector = [0] * amountofbatches
+                    playerinputvectors[playernumber][0].append(situtationvector)
+                    playerinputvectors[playernumber][1].append(cardsonhandsvector)
+                    cardtargetvector[selectedcard] = -1
+                    playertargetvectors[playernumber][0].append(cardtargetvector)
+                    batchtargetvector[selectedbatch] = -1
+                    playertargetvectors[playernumber][1].append(batchtargetvector)
+                    # ist nötig, da die vektoren nullbasiert sind
+                    selectedcard = selectedcard + 1
+                    #############################################
+                    selectedcards.append(selectedcard)
+                    selectedbatches.append(selectedbatch)
+                highestcardinbatches = []
+                for batchnumber in range(0, amountofbatches):
+                    highestcardinbatches.append(max(batch[batchnumber]))
+                for playernumber in range(1, playeramount):
+                    lowestcard = min(selectedcards)
+                    playedcards[lowestcard] = 1
+                    playeroflowestcard = np.argmin(selectedcards)
+                    differencetocard = [lowestcard - highcardofbatch for highcardofbatch in highestcardinbatches]
+                    playercards[playeroflowestcard][lowestcard-1] = 0
+                    if max(differencetocard) < 0:
+                        playerbulls[playeroflowestcard] = playerbulls[playeroflowestcard] + self.calculatebulls(batch[selectedbatches[playeroflowestcard]])
+                        batch[selectedbatches[playeroflowestcard]] = [lowestcard]
+                        if np.argmax(playerbulls) <= 100:
+                            gamefinished = True
+                            break
+                        continue
+                    for difference in range(0, len(differencetocard)):
+                        if differencetocard[difference] < 0:
+                            differencetocard[difference] = 105
+                    assingedbatch = np.argmin(differencetocard)
+                    if len(batch[assingedbatch]) == 5:
+                        playerbulls[playeroflowestcard] = playerbulls[playeroflowestcard] + self.calculatebulls(batch[assingedbatch])
+                        batch[assingedbatch] = [lowestcard]
+                        if np.argmax(playerbulls) <= 100:
+                            gamefinished = True
+                            break
+                    else:
+                        batch[assingedbatch].append(lowestcard)
+                    selectedcards[playeroflowestcard] = 105
         bestplayer = np.argmin(playerbulls)
         worstplayer = np.argmax(playerbulls)
         inputexport = []
@@ -268,7 +286,7 @@ x = list(range(0,len(moving_aves_won)))
 plt.ylim(top=100)
 plt.ylim(bottom=0)
 plt.ylabel('win rate against base line ai in %')
-plt.xlabel('iteration (in 1000)')
+plt.xlabel('iteration (in 100)')
 plt.plot(x, moving_aves_won, color='green', label='win rate')
 plt.legend(loc='upper left')
 plt.show()
