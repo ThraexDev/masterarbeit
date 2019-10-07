@@ -48,7 +48,7 @@ def evaluate(model):
         while gameResult == 'pass':
             gameState = playerState[currentPlayer % 2] + playerState[(currentPlayer + 1) % 2]
             action = -1
-            if currentPlayer % 2 == 0:
+            if currentPlayer % 2 == 1:
                 prediction = model.predict_on_batch(np.array([gameState])).numpy()[0]
                 while checkViolation(playerState[0], playerState[1], np.argmax(prediction)):
                     prediction[np.argmax(prediction)] = -1
@@ -79,7 +79,7 @@ def evaluate(model):
             gameResult = calculateGameState(playerState[currentPlayer % 2],
                                                  playerState[(currentPlayer + 1) % 2])
             if gameResult == 'player1won':
-                if currentPlayer % 2 == 0:
+                if currentPlayer % 2 == 1:
                     wongames = wongames + 1
             if gameResult == 'stalemate':
                 stalegames = stalegames + 1
@@ -90,7 +90,7 @@ def evaluate(model):
 oldmodellist = [makenewmodel()]
 model = makenewmodel()
 startoldmodel = len(oldmodellist) -1
-for turnnumber in range(0, 200000):
+for turnnumber in range(0, 1500000):
     #print(str(turnnumber)+'/200000')
     trainmodel = False
     currentoldmodel = startoldmodel
@@ -130,7 +130,7 @@ for turnnumber in range(0, 200000):
                         if currentoldmodel == -1:
                             trainmodel = True
                             oldmodellist.append(model)
-                            if nnposition == 0:
+                            if nnposition == 1:
                                 evaluate(model)
                                 xvalue.append(turnnumber)
                             model.save_weights('testmodel')
@@ -163,7 +163,7 @@ for turnnumber in range(0, 200000):
                         if currentoldmodel == -1:
                             trainmodel = True
                             oldmodellist.append(model)
-                            if nnposition == 0:
+                            if nnposition == 1:
                                 evaluate(model)
                                 xvalue.append(turnnumber)
                             model.save_weights('testmodel')
@@ -180,14 +180,33 @@ for turnnumber in range(0, 200000):
         exportLabels.extend(labels)
     model.train_on_batch(np.array(exportData), np.array(exportLabels))
 
+N = 3
+cumsum, moving_aves_won = [0], []
+for i, x in enumerate(historywon, 1):
+    cumsum.append(cumsum[i-1] + x)
+    if i>=N:
+        moving_ave = (cumsum[i] - cumsum[i-N])/N
+        moving_aves_won.append(moving_ave)
+cumsum, moving_aves_stale = [0], []
+for i, x in enumerate(historystale, 1):
+    cumsum.append(cumsum[i-1] + x)
+    if i>=N:
+        moving_ave = (cumsum[i] - cumsum[i-N])/N
+        moving_aves_stale.append(moving_ave)
 wonandstale = list( map(add, historywon, historystale))
-x = list(range(0,len(historywon)))
+cumsum, moving_aves_stale_and_won = [0], []
+for i, x in enumerate(wonandstale, 1):
+    cumsum.append(cumsum[i-1] + x)
+    if i>=N:
+        moving_ave = (cumsum[i] - cumsum[i-N])/N
+        moving_aves_stale_and_won.append(moving_ave)
+x = list(range(0,len(moving_aves_won)))
 plt.ylim(top=100)
 plt.ylim(bottom=0)
 plt.ylabel('win rate against base line ai in %')
 plt.xlabel('iteration')
-plt.plot(x, historywon, color='green', label='win rate')
-plt.plot(x, historystale, color='blue', label='stalemate rate')
-plt.plot(x, wonandstale, color='red', label='combined win and stalemate rate')
+plt.plot(x, moving_aves_won, color='green', label='win rate')
+plt.plot(x, moving_aves_stale, color='blue', label='stalemate rate')
+plt.plot(x, moving_aves_stale_and_won, color='red', label='combined win and stalemate rate')
 plt.legend(loc='upper left')
 plt.show()

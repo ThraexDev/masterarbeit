@@ -2,9 +2,9 @@ import tensorflow as tf
 import numpy as np
 
 model = tf.keras.models.Sequential([
-  tf.keras.layers.Dense(72, activation=tf.nn.tanh, input_shape=(18,)),
-  tf.keras.layers.Dense(36, activation=tf.nn.tanh),
-  tf.keras.layers.Dense(9, activation=tf.nn.tanh)
+    tf.keras.layers.Dense(100, activation=tf.nn.tanh, input_shape=(18,)),
+    tf.keras.layers.Dense(27, activation=tf.nn.tanh),
+    tf.keras.layers.Dense(9, activation=tf.nn.tanh)
 ])
 
 model.compile(optimizer='adam',
