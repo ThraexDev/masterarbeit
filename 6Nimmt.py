@@ -20,6 +20,8 @@ model.compile(optimizer='adam',
               metrics=['accuracy'])
 
 historywon = []
+vertifygames = 1000
+distanceofvertification = 100
 
 class GameStateGenerator(tf.compat.v2.keras.utils.Sequence):
     def __init__(self, tfmodel):
@@ -66,9 +68,9 @@ class GameStateGenerator(tf.compat.v2.keras.utils.Sequence):
         cardamount = 104
         playeramount = 4
         ################################################################################################################
-        if item % 100 == 0 or item == 0:
+        if item % distanceofvertification == 0 or item == 0:
             wongames = 0
-            for testgame in range(0, 100):
+            for testgame in range(0, vertifygames):
                 playerbulls = []
                 for playernumber in range(0, playeramount):
                     playerbulls.append(0)
@@ -157,7 +159,7 @@ class GameStateGenerator(tf.compat.v2.keras.utils.Sequence):
                 bestplayer = np.argmin(playerbulls)
                 if bestplayer == 0:
                     wongames = wongames + 1
-            historywon.append(wongames)
+            historywon.append(wongames/(vertifygames/100))
         ################################################################################################################
         playertargetvectors = []
         playerinputvectors = []
@@ -283,10 +285,10 @@ for i, x in enumerate(historywon, 1):
         moving_ave = (cumsum[i] - cumsum[i-N])/N
         moving_aves_won.append(moving_ave)
 x = list(range(0,len(moving_aves_won)))
-plt.ylim(top=100)
-plt.ylim(bottom=0)
+plt.ylim(top=max(moving_aves_won))
+plt.ylim(bottom=min(moving_aves_won))
 plt.ylabel('win rate against base line ai in %')
-plt.xlabel('iteration (in 100)')
+plt.xlabel('iteration (in '+str(distanceofvertification)+')')
 plt.plot(x, moving_aves_won, color='green', label='win rate')
 plt.legend(loc='upper left')
 plt.show()
