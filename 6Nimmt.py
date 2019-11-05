@@ -275,7 +275,7 @@ class GameStateGenerator(tf.compat.v2.keras.utils.Sequence):
 
 generator = GameStateGenerator(model)
 
-model.fit_generator(generator=generator, epochs=1, workers=0, max_queue_size=1, verbose=1, shuffle=False)
+model.fit_generator(generator=generator, epochs=1, workers=10, max_queue_size=10, verbose=1, shuffle=False)
 
 N = 1
 cumsum, moving_aves_won = [0], []
