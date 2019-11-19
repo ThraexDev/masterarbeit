@@ -4,6 +4,7 @@ from tictactoe.MCSTNodeInterface import AbstractMCSTNode
 
 
 class MCSTNode(AbstractMCSTNode):
+
     def __init__(self, move, p_value, model, board, player_number, is_own_move):
         self.is_not_existing = True
         self.move = move
@@ -40,5 +41,14 @@ class MCSTNode(AbstractMCSTNode):
         best_node.expand()
 
     def get_q_and_u_score(self):
+        u_score = self.p_value / (1 + self.visit_count)
+        if self.is_not_existing:
+            return u_score
+        q_score = self.get_combined_v_values() / self.visit_count
+        return q_score + u_score
 
-
+    def get_combined_v_values(self):
+        v_value = self.v_value.copy()
+        for sub_node in self.sub_nodes:
+            v_value = v_value + sub_node.get_combined_q_values
+        return v_value
