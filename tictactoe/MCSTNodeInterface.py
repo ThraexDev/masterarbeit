@@ -8,9 +8,13 @@ class AbstractMCSTNode(ABC):
         pass
 
     @abstractmethod
-    def get_q_and_u_score(self):
+    def get_q_and_u_score(self) -> float:
         pass
 
     @abstractmethod
-    def get_combined_v_values(self):
+    def get_combined_v_values(self) -> float:
+        pass
+
+    @abstractmethod
+    def get_visit_counter(self) -> int:
         pass

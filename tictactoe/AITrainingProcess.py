@@ -4,6 +4,9 @@ import threading
 import numpy as np
 import tensorflow as tf
 
+from tictactoe.Board import Board
+from tictactoe.Player import Player
+
 
 class AITrainingProcess(threading.Thread):
 
@@ -48,8 +51,8 @@ class AITrainingProcess(threading.Thread):
                     self.model.train({'input': np.array(self.training_inputs), 'allow': np.array(self.allowed_moves)}, {'moveprobability': np.array(self.move_probabilities), 'winprobability': np.array(self.win_probabilities)})
 
     def play_game(self, ai_old):
-        player_with_current_ai = Player(self.model)
-        player_with_old_ai = Player(ai_old)
+        player_with_current_ai = Player(self.model, 0)
+        player_with_old_ai = Player(ai_old, 1)
         board = Board()
         training_input_current_player = []
         training_input_old_player = []
@@ -71,14 +74,14 @@ class AITrainingProcess(threading.Thread):
                 allowed_moves_current_player.append(allowed_moves)
                 move_probabilities_current_player.append(move_probability)
                 current_ai_plays = False
-                player_number = 1
+                player_number = player_with_current_ai.get_player_number()
             else:
                 move_probability, player_input = player_with_old_ai.calculate_turn(board)
                 training_input_old_player.append(player_input)
                 allowed_moves_old_player.append(allowed_moves)
                 move_probabilities_old_player.append(move_probability)
                 current_ai_plays = True
-                player_number = 2
+                player_number = player_with_old_ai.get_player_number()
             move = np.argmax(move_probability)
             current_player_won, game_not_finished = board.add_move(player_number, move)
         if current_player_won:
