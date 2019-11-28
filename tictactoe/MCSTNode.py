@@ -2,6 +2,7 @@ import numpy as np
 
 from tictactoe.MCSTLeafNode import MCSTLeafNode
 from tictactoe.MCSTNodeInterface import AbstractMCSTNode
+from copy import deepcopy
 
 
 class MCSTNode(AbstractMCSTNode):
@@ -18,11 +19,10 @@ class MCSTNode(AbstractMCSTNode):
         self.visit_count = 0
         self.q_value = 0
         self.is_own_move = is_own_move
-        self.sub_nodes = [AbstractMCSTNode]
-        prediction = model. model.predict_on_batch({'input': np.array([board.get_input(player_number)]), 'allow': np.array([board.get_allow(player_number)]).astype(float)})
-        self.p_values = prediction[0]
-        self.v_value = prediction[1]
-        self.v_value = prediction[1]
+        self.sub_nodes = []
+        prediction = model.predict_on_batch({'input': np.array([board.get_input(player_number)]), 'allow': np.array([board.get_allow()]).astype(float)})
+        self.p_values = prediction[0].numpy()[0].tolist()
+        self.v_value = float(prediction[1].numpy()[0][0])
         # turn the win probability if it is the enemies move
         if not is_own_move:
             self.v_value = 1 - self.v_value
@@ -31,7 +31,7 @@ class MCSTNode(AbstractMCSTNode):
         self.visit_count = self.visit_count + 1
         if self.is_not_existing:
             for node_number in range(0, len(self.p_values)):
-                new_board = self.board.copy()
+                new_board = deepcopy(self.board)
                 current_player_won, game_not_finished = new_board.add_move(self.player_number, node_number)
                 if game_not_finished:
                     self.sub_nodes.append(MCSTNode(self.p_values[node_number], self.model, new_board, (self.player_number + 1) % 2, not self.is_own_move))
@@ -43,7 +43,7 @@ class MCSTNode(AbstractMCSTNode):
             return
         best_node = self.sub_nodes[0]
         for sub_node_number in range(1, len(self.sub_nodes)):
-            if self.sub_nodes[sub_node_number].get_q_and_u_score > best_node.get_q_and_u_score:
+            if self.sub_nodes[sub_node_number].get_q_and_u_score() > best_node.get_q_and_u_score():
                 best_node = self.sub_nodes[sub_node_number]
         best_node.expand()
 
@@ -57,7 +57,7 @@ class MCSTNode(AbstractMCSTNode):
     def get_combined_v_values(self):
         if self.is_not_existing:
             return 0
-        v_value = self.v_value.copy()
+        v_value = deepcopy(self.v_value)
         for sub_node in self.sub_nodes:
             v_value = v_value + sub_node.get_combined_v_values()
         return v_value
@@ -65,7 +65,7 @@ class MCSTNode(AbstractMCSTNode):
     def get_visit_distribution(self):
         visit_distribution = []
         for i in range(0, len(self.sub_nodes)):
-            visit_distribution[i] = self.sub_nodes[i].get_visit_counter()
+            visit_distribution.append(self.sub_nodes[i].get_visit_counter())
         sum_of_visits = sum(visit_distribution)
         for j in range(0, len(visit_distribution)):
             visit_distribution[j] = visit_distribution[j] / sum_of_visits

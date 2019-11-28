@@ -4,22 +4,23 @@ import threading
 import numpy as np
 import tensorflow as tf
 
+from tictactoe import AITrainer
 from tictactoe.Board import Board
 from tictactoe.Player import Player
 
 
 class AITrainingProcess(threading.Thread):
 
-    def __init__(self, ai_trainer, is_starter):
+    def __init__(self, ai_trainer: AITrainer.AITrainer, is_starter: bool):
         self.ai_trainer = ai_trainer
-        input = tf.keras.Input(shape=(18,), name='input')
+        input_layer = tf.keras.Input(shape=(18,), name='input')
         allowed_moves = tf.keras.Input(shape=(9,), name='allow')
-        middle = tf.keras.layers.Dense(100, activation=tf.nn.tanh, name='middle')(input)
+        middle = tf.keras.layers.Dense(100, activation=tf.nn.tanh, name='middle')(input_layer)
         moveprobability = tf.keras.layers.Dense(9, activation=tf.nn.softmax, name='moveprobability')(middle)
         winprobability = tf.keras.layers.Dense(1, activation=tf.nn.tanh, name='winprobability')(middle)
         allowedcardprobability = tf.keras.layers.Multiply()([allowed_moves, moveprobability])
 
-        self.model = tf.keras.Model(inputs=[input, allowed_moves],
+        self.model = tf.keras.Model(inputs=[input_layer, allowed_moves],
                                outputs=[allowedcardprobability, winprobability])
         self.model.compile(optimizer='adam',
                       loss=[tf.compat.v2.losses.sparse_categorical_crossentropy, tf.compat.v2.losses.mean_squared_error],
@@ -45,14 +46,14 @@ class AITrainingProcess(threading.Thread):
                 old_model_slice.remove(random_old_model)
                 if last_game_was_victory:
                     if len(old_model_slice) == 0:
-                        self.ai_trainer.continue_training = False
-                        self.ai_trainer.old_ai.append(self.model)
+                        self.ai_trainer.finishIteration(self.model)
                 else:
                     self.model.train({'input': np.array(self.training_inputs), 'allow': np.array(self.allowed_moves)}, {'moveprobability': np.array(self.move_probabilities), 'winprobability': np.array(self.win_probabilities)})
 
-    def play_game(self, ai_old):
+    def play_game(self, ai_old: tf.keras.Model):
         player_with_current_ai = Player(self.model, 0)
         player_with_old_ai = Player(ai_old, 1)
+        board: Board
         board = Board()
         training_input_current_player = []
         training_input_old_player = []
@@ -76,14 +77,14 @@ class AITrainingProcess(threading.Thread):
                 current_ai_plays = False
                 player_number = player_with_current_ai.get_player_number()
             else:
-                move_probability, player_input = player_with_old_ai.calculate_turn(board)
+                move_probability, player_input, allowed_moves = player_with_old_ai.calculate_turn(board)
                 training_input_old_player.append(player_input)
                 allowed_moves_old_player.append(allowed_moves)
                 move_probabilities_old_player.append(move_probability)
                 current_ai_plays = True
                 player_number = player_with_old_ai.get_player_number()
             move = np.argmax(move_probability)
-            current_player_won, game_not_finished = board.add_move(player_number, move)
+            current_player_won, game_not_finished = board.add_move(player_number, move[0])
         if current_player_won:
             win_probabilities_current_player = [1] * len(training_input_current_player)
             win_probabilities_old_player = [-1] * len(training_input_old_player)

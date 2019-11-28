@@ -14,10 +14,10 @@ class MCSTLeafNode(AbstractMCSTNode):
         self.is_not_existing = True
 
     def get_q_and_u_score(self):
-        u_score = self.p_value / (1 + self.visit_count)
+        u_score = self.p_value / (1 + self.visit_counter)
         if self.is_not_existing:
             return u_score
-        q_score = self.get_combined_v_values() / self.visit_count
+        q_score = self.get_combined_v_values() / self.visit_counter
         return q_score + u_score
 
     def get_combined_v_values(self):
