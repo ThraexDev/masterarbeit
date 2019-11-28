@@ -1,5 +1,6 @@
 import random
 import threading
+import time
 
 import numpy as np
 import tensorflow as tf
@@ -55,9 +56,11 @@ class AITrainingProcess(threading.Thread):
                     random_int = random.randint(0, len(old_model_slice)-1)
                 else:
                     random_int = 0
+                print(len(old_model_slice))
+                print(random_int)
                 random_old_model = old_model_slice[random_int]
                 last_game_was_victory = self.play_game(random_old_model)
-                old_model_slice.remove(random_int)
+                old_model_slice.remove(random_old_model)
                 if last_game_was_victory:
                     if len(old_model_slice) == 0:
                         print("iteration end")
@@ -139,6 +142,7 @@ class AITrainer:
                         iteration_is_over = True
                         self.old_ai.append(self.training_processes[training_process_number].get_model())
                         break
+                time.sleep(1)
 
 
 trainer = AITrainer(4, 10)

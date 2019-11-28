@@ -21,11 +21,11 @@ class MCSTNode(AbstractMCSTNode):
         self.is_own_move = is_own_move
         self.sub_nodes = []
         prediction = model.predict_on_batch({'input': np.array([board.get_input(player_number)]), 'allow': np.array([board.get_allow()]).astype(float)})
-        self.p_values = prediction[0].numpy()[0].tolist()
-        self.v_value = float(prediction[1].numpy()[0][0])
+        self.p_values = prediction[0].numpy().tolist()[0]
+        self.v_value = prediction[1].numpy().tolist()[0][0]
         # turn the win probability if it is the enemies move
         if not is_own_move:
-            self.v_value = 1 - self.v_value
+            self.v_value = 0.0 - self.v_value
 
     def expand(self):
         self.visit_count = self.visit_count + 1
