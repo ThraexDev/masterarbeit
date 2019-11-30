@@ -22,7 +22,7 @@ class Board:
                 check_fields[2] == 1 and check_fields[5] and check_fields[8] == 1) or (
                 check_fields[0] == 1 and check_fields[4] and check_fields[8] == 1) or (
                 check_fields[2] == 1 and check_fields[4] and check_fields[6] == 1):
-            return current_player_won, game_not_finished
+            return current_player_won, False
         if sum(self.fields_player_0) + sum(self.fields_player_1) == self.amount_of_fields:
             game_not_finished = False
             if player_number == 0:
@@ -41,7 +41,7 @@ class Board:
 
     def get_allow(self) -> list:
         allow_vector = [1] * self.amount_of_fields
-        for field_number in range(0, self.amount_of_fields - 1):
+        for field_number in range(0, self.amount_of_fields):
             if self.fields_player_0[field_number] == 1 or self.fields_player_1[field_number] == 1:
                 allow_vector[field_number] = 0
         return allow_vector
