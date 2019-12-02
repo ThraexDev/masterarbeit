@@ -17,13 +17,13 @@ class AITrainingProcess(threading.Thread):
         allowed_moves = tf.keras.Input(shape=(9,), name='allow')
         middle = tf.keras.layers.Dense(100, activation=tf.nn.tanh, name='middle')(input_layer)
         moveprobability = tf.keras.layers.Dense(9, activation=tf.nn.sigmoid, name='moveprobability')(middle)
-        winprobability = tf.keras.layers.Dense(1, activation=tf.nn.tanh, name='winprobability')(middle)
+        winprobability = tf.keras.layers.Dense(1, activation=tf.nn.sigmoid, name='winprobability')(middle)
         allowedcardprobability = tf.keras.layers.Multiply(name='finalmoveprobability')([allowed_moves, moveprobability])
 
         self.model = tf.keras.Model(inputs=[input_layer, allowed_moves],
                                outputs=[allowedcardprobability, winprobability])
         self.model.compile(optimizer='adam',
-                      loss=[tf.compat.v2.losses.BinaryCrossentropy(), tf.compat.v2.losses.mean_squared_error],
+                      loss=[tf.compat.v2.losses.CategoricalCrossentropy(), tf.compat.v2.losses.mean_squared_error],
                       metrics=['accuracy'])
         self.model_is_starter = is_starter
         self.training_inputs = []
@@ -68,7 +68,7 @@ class AITrainingProcess(threading.Thread):
                     old_model_slice.remove(random_old_model)
                     if len(old_model_slice) == 0:
                         test_games_won = 0
-                        for test_game_number in range(0, 10):
+                        for test_game_number in range(0, 100):
                             if self.play_game(TestPlayer(player_number)):
                                 test_games_won = test_games_won + 1
                         self.test_games_won = test_games_won
@@ -76,6 +76,12 @@ class AITrainingProcess(threading.Thread):
                         break
                 else:
                     print("lost")
+                    if self.model_is_starter: print('starter')
+                    print(random_int)
+                    print(self.training_inputs)
+                    print(self.allowed_moves)
+                    print(self.move_probabilities)
+                    print(self.win_probabilities)
                     self.model.fit({'input': np.array(self.training_inputs), 'allow': np.array(self.allowed_moves)}, {'finalmoveprobability': np.array(self.move_probabilities), 'winprobability': np.array(self.win_probabilities)})
 
     def play_game(self, player_with_old_ai: Player):
@@ -116,18 +122,20 @@ class AITrainingProcess(threading.Thread):
             current_player_won, game_not_finished = board.add_move(player_number, move)
         if (current_player_won and not current_ai_plays) or (not current_player_won and current_ai_plays):
             win_probabilities_current_player = [[1]] * len(training_input_current_player)
-            win_probabilities_old_player = [[-1]] * len(training_input_old_player)
+            win_probabilities_old_player = [[0]] * len(training_input_old_player)
+            move_probabilities_old_player = [[0.0001]*9] * len(training_input_old_player)
             game_won = True
         else:
-            win_probabilities_current_player = [[-1]] * len(training_input_current_player)
+            win_probabilities_current_player = [[0]] * len(training_input_current_player)
+            move_probabilities_current_player = [[0.0001]*9] * len(training_input_current_player)
             win_probabilities_old_player = [[1]] * len(training_input_old_player)
             game_won = False
         self.training_inputs.extend(training_input_current_player)
-        self.training_inputs.extend(training_input_old_player)
+        #self.training_inputs.extend(training_input_old_player)
         self.allowed_moves.extend(allowed_moves_current_player)
-        self.allowed_moves.extend(allowed_moves_old_player)
+        #self.allowed_moves.extend(allowed_moves_old_player)
         self.move_probabilities.extend(move_probabilities_current_player)
-        self.move_probabilities.extend(move_probabilities_old_player)
+        #self.move_probabilities.extend(move_probabilities_old_player)
         self.win_probabilities.extend(win_probabilities_current_player)
-        self.win_probabilities.extend(win_probabilities_old_player)
+        #self.win_probabilities.extend(win_probabilities_old_player)
         return game_won

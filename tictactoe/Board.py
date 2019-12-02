@@ -9,10 +9,12 @@ class Board:
         game_not_finished = True
         current_player_won = True
         if player_number == 0:
-            self.fields_player_0[move] = 1
+            if self.fields_player_0[move] == 0:
+                self.fields_player_0[move] = 1
             check_fields = self.fields_player_0
         else:
-            self.fields_player_1[move] = 1
+            if self.fields_player_1[move] == 0:
+                self.fields_player_1[move] = 1
             check_fields = self.fields_player_1
         if (check_fields[0] == 1 and check_fields[1] and check_fields[2] == 1) or (
                 check_fields[3] == 1 and check_fields[4] and check_fields[5] == 1) or (

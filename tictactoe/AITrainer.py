@@ -27,7 +27,13 @@ class AITrainer:
                 for training_process_number in range(0, len(self.training_processes)):
                     if self.training_processes[training_process_number].is_finished():
                         iteration_is_over = True
-                        self.old_ai.append(self.training_processes[training_process_number].get_model())
+                        finished_model = self.training_processes[training_process_number].get_model()
+                        if is_starter:
+                            name = 'starter_'
+                        else:
+                            name = 'no_starter_'
+                        finished_model.save_weights(name+str(iteration_number))
+                        self.old_ai.append(finished_model)
                         if is_starter:
                             self.starter_data.append(self.training_processes[training_process_number].test_games_won)
                             f = open("starter.txt", "w")
