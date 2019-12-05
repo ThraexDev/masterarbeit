@@ -131,11 +131,11 @@ class AITrainingProcess(threading.Thread):
             win_probabilities_old_player = [[1]] * len(training_input_old_player)
             game_won = False
         self.training_inputs.extend(training_input_current_player)
-        #self.training_inputs.extend(training_input_old_player)
+        self.training_inputs.extend(training_input_old_player)
         self.allowed_moves.extend(allowed_moves_current_player)
-        #self.allowed_moves.extend(allowed_moves_old_player)
+        self.allowed_moves.extend(allowed_moves_old_player)
         self.move_probabilities.extend(move_probabilities_current_player)
-        #self.move_probabilities.extend(move_probabilities_old_player)
+        self.move_probabilities.extend(move_probabilities_old_player)
         self.win_probabilities.extend(win_probabilities_current_player)
-        #self.win_probabilities.extend(win_probabilities_old_player)
+        self.win_probabilities.extend(win_probabilities_old_player)
         return game_won

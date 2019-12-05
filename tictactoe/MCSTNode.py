@@ -25,7 +25,7 @@ class MCSTNode(AbstractMCSTNode):
         self.v_value = prediction[1].numpy().tolist()[0][0]
         # turn the win probability if it is the enemies move
         if not is_own_move:
-            self.v_value = 1.0 - self.v_value
+            self.v_value = 0.0 - self.v_value
 
     def expand(self):
         self.visit_count = self.visit_count + 1
@@ -34,17 +34,20 @@ class MCSTNode(AbstractMCSTNode):
                 new_board = deepcopy(self.board)
                 current_player_won, game_not_finished = new_board.add_move(self.player_number, node_number)
                 if game_not_finished:
-                    self.sub_nodes.append(MCSTNode(self.p_values[node_number], self.model, new_board, (self.player_number + 1) % 2, not self.is_own_move))
+                    self.sub_nodes.append(MCSTNode(self.p_values[node_number]/10, self.model, new_board, (self.player_number + 1) % 2, not self.is_own_move))
                 else:
-                    v_value_for_sub_node = 0
+                    v_value_for_sub_node = -1
                     if current_player_won: v_value_for_sub_node = 1
-                    self.sub_nodes.append(MCSTLeafNode(self.p_values[node_number], v_value_for_sub_node, not self.is_own_move))
+                    self.sub_nodes.append(MCSTLeafNode(self.p_values[node_number]/10, v_value_for_sub_node, not self.is_own_move))
             self.is_not_existing = False
             return
-        best_node = self.sub_nodes[0]
-        for sub_node_number in range(1, len(self.sub_nodes)):
-            if self.sub_nodes[sub_node_number].get_q_and_u_score() > best_node.get_q_and_u_score():
+        for sub_node_number in range(0, len(self.sub_nodes)):
+            if self.board.get_allow()[sub_node_number] == 1:
                 best_node = self.sub_nodes[sub_node_number]
+        for sub_node_number in range(0, len(self.sub_nodes)):
+            if self.sub_nodes[sub_node_number].get_q_and_u_score() > best_node.get_q_and_u_score():
+                if self.board.get_allow()[sub_node_number] == 1:
+                    best_node = self.sub_nodes[sub_node_number]
         best_node.expand()
 
     def get_q_and_u_score(self):

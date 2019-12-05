@@ -13,7 +13,7 @@ class MCSTLeafNode(AbstractMCSTNode):
         self.visit_counter = 0
         self.is_not_existing = True
         if not is_own_move:
-            self.v_value = 1.0 - self.v_value
+            self.v_value = 0.0 - self.v_value
 
     def get_q_and_u_score(self):
         u_score = self.p_value / (1 + self.visit_counter)

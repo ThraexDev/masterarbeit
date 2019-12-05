@@ -39,6 +39,7 @@ class Board:
         else:
             input_vector.extend(self.fields_player_1)
             input_vector.extend(self.fields_player_0)
+        input_vector.extend(self.get_allow())
         return input_vector
 
     def get_allow(self) -> list:
