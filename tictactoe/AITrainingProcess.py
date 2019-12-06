@@ -13,11 +13,12 @@ class AITrainingProcess(threading.Thread):
 
     def __init__(self, old_model_list, is_starter: bool):
         super().__init__()
-        input_layer = tf.keras.Input(shape=(18,), name='input')
+        input_layer = tf.keras.Input(shape=(27,), name='input')
         allowed_moves = tf.keras.Input(shape=(9,), name='allow')
-        middle = tf.keras.layers.Dense(100, activation=tf.nn.tanh, name='middle')(input_layer)
+        big_layer = tf.keras.layers.Dense(100, activation=tf.nn.tanh, name='big')(input_layer)
+        middle = tf.keras.layers.Dense(27, activation=tf.nn.tanh, name='middle')(big_layer)
         moveprobability = tf.keras.layers.Dense(9, activation=tf.nn.sigmoid, name='moveprobability')(middle)
-        winprobability = tf.keras.layers.Dense(1, activation=tf.nn.sigmoid, name='winprobability')(middle)
+        winprobability = tf.keras.layers.Dense(1, activation=tf.nn.tanh, name='winprobability')(middle)
         allowedcardprobability = tf.keras.layers.Multiply(name='finalmoveprobability')([allowed_moves, moveprobability])
 
         self.model = tf.keras.Model(inputs=[input_layer, allowed_moves],
@@ -122,12 +123,10 @@ class AITrainingProcess(threading.Thread):
             current_player_won, game_not_finished = board.add_move(player_number, move)
         if (current_player_won and not current_ai_plays) or (not current_player_won and current_ai_plays):
             win_probabilities_current_player = [[1]] * len(training_input_current_player)
-            win_probabilities_old_player = [[0]] * len(training_input_old_player)
-            move_probabilities_old_player = [[0.0001]*9] * len(training_input_old_player)
+            win_probabilities_old_player = [[-1]] * len(training_input_old_player)
             game_won = True
         else:
-            win_probabilities_current_player = [[0]] * len(training_input_current_player)
-            move_probabilities_current_player = [[0.0001]*9] * len(training_input_current_player)
+            win_probabilities_current_player = [[-1]] * len(training_input_current_player)
             win_probabilities_old_player = [[1]] * len(training_input_old_player)
             game_won = False
         self.training_inputs.extend(training_input_current_player)

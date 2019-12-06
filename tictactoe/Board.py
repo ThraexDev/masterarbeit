@@ -5,9 +5,9 @@ class Board:
         self.fields_player_0 = [0] * self.amount_of_fields
         self.fields_player_1 = [0] * self.amount_of_fields
 
-    def add_move(self, player_number: int, move: int) -> (bool, bool):
+    def add_move(self, player_number: int, move: int) -> (int, bool):
         game_not_finished = True
-        current_player_won = True
+        game_feedback = 0
         if player_number == 0:
             if self.fields_player_0[move] == 0:
                 self.fields_player_0[move] = 1
@@ -16,20 +16,26 @@ class Board:
             if self.fields_player_1[move] == 0:
                 self.fields_player_1[move] = 1
             check_fields = self.fields_player_1
-        if (check_fields[0] == 1 and check_fields[1] and check_fields[2] == 1) or (
-                check_fields[3] == 1 and check_fields[4] and check_fields[5] == 1) or (
-                check_fields[6] == 1 and check_fields[7] and check_fields[8] == 1) or (
-                check_fields[0] == 1 and check_fields[3] and check_fields[6] == 1) or (
-                check_fields[1] == 1 and check_fields[4] and check_fields[7] == 1) or (
-                check_fields[2] == 1 and check_fields[5] and check_fields[8] == 1) or (
-                check_fields[0] == 1 and check_fields[4] and check_fields[8] == 1) or (
-                check_fields[2] == 1 and check_fields[4] and check_fields[6] == 1):
-            return current_player_won, False
+        if (check_fields[0] == 1 and check_fields[1] == 1 and check_fields[2] == 1) or (
+                check_fields[3] == 1 and check_fields[4] == 1 and check_fields[5] == 1) or (
+                check_fields[6] == 1 and check_fields[7] == 1 and check_fields[8] == 1) or (
+                check_fields[0] == 1 and check_fields[3] == 1 and check_fields[6] == 1) or (
+                check_fields[1] == 1 and check_fields[4] == 1 and check_fields[7] == 1) or (
+                check_fields[2] == 1 and check_fields[5] == 1 and check_fields[8] == 1) or (
+                check_fields[0] == 1 and check_fields[4] == 1 and check_fields[8] == 1) or (
+                check_fields[2] == 1 and check_fields[4] == 1 and check_fields[6] == 1):
+            return 1, False
         if sum(self.fields_player_0) + sum(self.fields_player_1) == self.amount_of_fields:
+            print(self.fields_player_0)
+            print(self.fields_player_1)
+            print(sum(self.fields_player_0) + sum(self.fields_player_1))
+            print(self.get_allow())
             game_not_finished = False
             if player_number == 0:
-                current_player_won = False
-        return current_player_won, game_not_finished
+                game_feedback = -1
+            else:
+                game_feedback = 1
+        return game_feedback, game_not_finished
 
     def get_input(self, player_number: int) -> list:
         input_vector = []
