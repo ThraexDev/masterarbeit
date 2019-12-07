@@ -31,10 +31,10 @@ class GameStateGenerator(tf.compat.v2.keras.utils.Sequence):
         self.model = tfmodel
 
     def __len__(self):
-        return 1000
+        return 100001
 
     def __getitem__(self, item):
-        if item % 100 == 0:
+        if item % 1000 == 0:
             model.save_weights("model" + str(item))
             won_games = 0
             for test_number in range(0, 10):
@@ -104,14 +104,12 @@ class GameStateGenerator(tf.compat.v2.keras.utils.Sequence):
             ai_0_plays = not ai_0_plays
             if ai_0_plays:
                 move_probability, player_input, allowed_moves_input = player0.calculate_turn(board)
-                print(move_probability)
                 training_input_player0.append(player_input)
                 allowed_moves_player0.append(allowed_moves_input)
                 move_probabilities_player0.append(move_probability)
                 game_feedback, game_not_finished = board.add_move(player0.get_player_number(), int(np.argmax(move_probability)))
             else:
                 move_probability, player_input, allowed_moves_input = player1.calculate_turn(board)
-                print(move_probability)
                 training_input_player1.append(player_input)
                 allowed_moves_player1.append(allowed_moves_input)
                 move_probabilities_player1.append(move_probability)
@@ -142,4 +140,4 @@ class GameStateGenerator(tf.compat.v2.keras.utils.Sequence):
 
 generator = GameStateGenerator(model)
 
-model.fit_generator(generator=generator, epochs=1, workers=1, max_queue_size=1, verbose=1, shuffle=False)
+model.fit_generator(generator=generator, epochs=1, workers=0, max_queue_size=0, verbose=1, shuffle=False)

@@ -7,6 +7,6 @@ class MCSTRootNode:
         self.root_node = MCSTNode(0, model, board, player_number, True)
 
     def get_result(self):
-        for i in range(0, 51):
+        for i in range(0, 11):
             self.root_node.expand()
         return self.root_node.get_visit_distribution()

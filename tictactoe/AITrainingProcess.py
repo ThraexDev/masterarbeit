@@ -65,7 +65,6 @@ class AITrainingProcess(threading.Thread):
                 last_game_was_victory = self.play_game(Player(random_old_model, player_number))
                 print(str(len(old_model_slice))+ '/'+ str(len(old_model_list)))
                 if last_game_was_victory:
-                    print("won")
                     old_model_slice.remove(random_old_model)
                     if len(old_model_slice) == 0:
                         test_games_won = 0
@@ -76,13 +75,6 @@ class AITrainingProcess(threading.Thread):
                         self.thread_finished = True
                         break
                 else:
-                    print("lost")
-                    if self.model_is_starter: print('starter')
-                    print(random_int)
-                    print(self.training_inputs)
-                    print(self.allowed_moves)
-                    print(self.move_probabilities)
-                    print(self.win_probabilities)
                     self.model.fit({'input': np.array(self.training_inputs), 'allow': np.array(self.allowed_moves)}, {'finalmoveprobability': np.array(self.move_probabilities), 'winprobability': np.array(self.win_probabilities)})
 
     def play_game(self, player_with_old_ai: Player):
@@ -98,7 +90,7 @@ class AITrainingProcess(threading.Thread):
         win_probabilities_old_player = []
         game_not_finished = True
         current_ai_plays = False
-        current_player_won = False
+        game_feedback = 0.0
         if self.model_is_starter:
             current_ai_plays = True
             player_with_current_ai = Player(self.model, 0)
@@ -120,15 +112,20 @@ class AITrainingProcess(threading.Thread):
                 current_ai_plays = True
                 player_number = player_with_old_ai.get_player_number()
             move = np.argmax(move_probability)
-            current_player_won, game_not_finished = board.add_move(player_number, move)
-        if (current_player_won and not current_ai_plays) or (not current_player_won and current_ai_plays):
-            win_probabilities_current_player = [[1]] * len(training_input_current_player)
-            win_probabilities_old_player = [[-1]] * len(training_input_old_player)
-            game_won = True
+            game_feedback, game_not_finished = board.add_move(player_number, move)
+        game_won = False
+        if not current_ai_plays:
+            win_probabilities_current_player = [[game_feedback]] * len(training_input_current_player)
+            win_probabilities_old_player = [[0.0-game_feedback]] * len(training_input_old_player)
+            if game_feedback == 1:
+                game_won = True
+            #move_probabilities_player1 = [[0.0001] * 9] * len(training_input_player1)
         else:
-            win_probabilities_current_player = [[-1]] * len(training_input_current_player)
-            win_probabilities_old_player = [[1]] * len(training_input_old_player)
-            game_won = False
+            win_probabilities_current_player = [[0.0-game_feedback]] * len(training_input_current_player)
+            win_probabilities_old_player = [[game_feedback]] * len(training_input_old_player)
+            if game_feedback == -1:
+                game_won = True
+            #move_probabilities_player0 = [[0.0001] * 9] * len(training_input_player0)
         self.training_inputs.extend(training_input_current_player)
         self.training_inputs.extend(training_input_old_player)
         self.allowed_moves.extend(allowed_moves_current_player)

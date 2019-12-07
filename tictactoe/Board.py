@@ -25,11 +25,7 @@ class Board:
                 check_fields[0] == 1 and check_fields[4] == 1 and check_fields[8] == 1) or (
                 check_fields[2] == 1 and check_fields[4] == 1 and check_fields[6] == 1):
             return 1, False
-        if sum(self.fields_player_0) + sum(self.fields_player_1) == self.amount_of_fields:
-            print(self.fields_player_0)
-            print(self.fields_player_1)
-            print(sum(self.fields_player_0) + sum(self.fields_player_1))
-            print(self.get_allow())
+        if sum(self.get_allow()) == 0:
             game_not_finished = False
             if player_number == 0:
                 game_feedback = -1

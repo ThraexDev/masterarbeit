@@ -4,25 +4,27 @@ import tensorflow as tf
 from tictactoe.Board import Board
 from tictactoe.Player import Player
 
-input_layer = tf.keras.Input(shape=(18,), name='input')
+
+input_layer = tf.keras.Input(shape=(27,), name='input')
 allowed_moves = tf.keras.Input(shape=(9,), name='allow')
-middle = tf.keras.layers.Dense(100, activation=tf.nn.tanh, name='middle')(input_layer)
+big_layer = tf.keras.layers.Dense(100, activation=tf.nn.tanh, name='big')(input_layer)
+middle = tf.keras.layers.Dense(27, activation=tf.nn.tanh, name='middle')(big_layer)
 moveprobability = tf.keras.layers.Dense(9, activation=tf.nn.sigmoid, name='moveprobability')(middle)
-winprobability = tf.keras.layers.Dense(1, activation=tf.nn.sigmoid, name='winprobability')(middle)
+winprobability = tf.keras.layers.Dense(1, activation=tf.nn.tanh, name='winprobability')(middle)
 allowedcardprobability = tf.keras.layers.Multiply(name='finalmoveprobability')([allowed_moves, moveprobability])
 
 model = tf.keras.Model(inputs=[input_layer, allowed_moves],
-                       outputs=[allowedcardprobability, winprobability])
+                            outputs=[allowedcardprobability, winprobability])
 model.compile(optimizer='adam',
-              loss=[tf.compat.v2.losses.BinaryCrossentropy(), tf.compat.v2.losses.mean_squared_error],
-              metrics=['accuracy'])
-model.load_weights("starter_4")
+                   loss=[tf.compat.v2.losses.CategoricalCrossentropy(), tf.compat.v2.losses.mean_squared_error],
+                   metrics=['accuracy'])
+model.load_weights("starter_12")
 
 ai_player = Player(model, 0)
 board = Board()
 game_not_finished = True
 ai_turn = True
-current_player_won = False
+game_feedback = 0.0
 
 while game_not_finished:
     if ai_turn:
@@ -31,12 +33,12 @@ while game_not_finished:
         print(input_ai)
         print(allow)
         move = np.argmax(prob)
-        current_player_won, game_not_finished = board.add_move(0, move)
+        game_feedback, game_not_finished = board.add_move(0, move)
     else:
         print(board.get_allow())
         move = int(input('move: '))
-        current_player_won, game_not_finished = board.add_move(1, move)
+        game_feedback, game_not_finished = board.add_move(1, move)
     ai_turn = not ai_turn
 
-if current_player_won:
+if game_feedback == 1:
     print('current player won')
