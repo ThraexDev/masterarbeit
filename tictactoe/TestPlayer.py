@@ -26,6 +26,10 @@ class TestPlayer:
                     move_vector = [0] * 9
                     move_vector[move_number] = 1
                     return move_vector, board.get_input(self.player_number), board.get_allow()
+        if board.get_allow()[4] == 1:
+            move_vector = [0] * 9
+            move_vector[4] = 1
+            return move_vector, board.get_input(self.player_number), board.get_allow()
         move = -1
         while move == -1:
             rand = random.randint(0, 8)

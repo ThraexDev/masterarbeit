@@ -20,7 +20,7 @@ allowedcardprobability = tf.keras.layers.Multiply(name='finalmoveprobability')([
 model = tf.keras.Model(inputs=[input_layer, allowed_moves],
                             outputs=[allowedcardprobability, winprobability])
 model.compile(optimizer='adam',
-                   loss=[tf.compat.v2.losses.CategoricalCrossentropy(), tf.compat.v2.losses.mean_squared_error],
+                   loss=[tf.compat.v2.losses.mean_squared_error, tf.compat.v2.losses.mean_squared_error],
                    metrics=['accuracy'])
 
 game_history_starter = []
@@ -34,7 +34,7 @@ class GameStateGenerator(tf.compat.v2.keras.utils.Sequence):
         return 100001
 
     def __getitem__(self, item):
-        if item % 1000 == 0:
+        if item % 10 == 0:
             model.save_weights("model" + str(item))
             won_games = 0
             for test_number in range(0, 10):

@@ -17,14 +17,14 @@ class AITrainingProcess(threading.Thread):
         allowed_moves = tf.keras.Input(shape=(9,), name='allow')
         big_layer = tf.keras.layers.Dense(100, activation=tf.nn.tanh, name='big')(input_layer)
         middle = tf.keras.layers.Dense(27, activation=tf.nn.tanh, name='middle')(big_layer)
-        moveprobability = tf.keras.layers.Dense(9, activation=tf.nn.sigmoid, name='moveprobability')(middle)
+        moveprobability = tf.keras.layers.Dense(9, activation=tf.nn.softmax, name='moveprobability')(middle)
         winprobability = tf.keras.layers.Dense(1, activation=tf.nn.tanh, name='winprobability')(middle)
         allowedcardprobability = tf.keras.layers.Multiply(name='finalmoveprobability')([allowed_moves, moveprobability])
 
         self.model = tf.keras.Model(inputs=[input_layer, allowed_moves],
                                outputs=[allowedcardprobability, winprobability])
         self.model.compile(optimizer='adam',
-                      loss=[tf.compat.v2.losses.CategoricalCrossentropy(), tf.compat.v2.losses.mean_squared_error],
+                      loss=[tf.compat.v2.losses.mean_squared_error, tf.compat.v2.losses.mean_squared_error],
                       metrics=['accuracy'])
         self.model_is_starter = is_starter
         self.training_inputs = []
@@ -43,39 +43,48 @@ class AITrainingProcess(threading.Thread):
 
     def run(self) -> None:
         old_model_list = self.old_model_list
+        from_the_start = True
+        last_old_model_number = 0
         if len(old_model_list) == 0:
             self.thread_finished = True
         while not self.thread_finished:
             last_game_was_victory = True
-            old_model_slice = old_model_list.copy()
+            if from_the_start:
+                old_model_slice = old_model_list.copy()
+            else:
+                old_model_slice = [old_model_list[last_old_model_number]]
             self.training_inputs = []
             self.allowed_moves = []
             self.move_probabilities = []
             self.win_probabilities = []
             while last_game_was_victory:
-                if len(old_model_slice) > 1:
-                    random_int = random.randint(0, len(old_model_slice)-1)
-                else:
-                    random_int = 0
-                random_old_model = old_model_slice[random_int]
+                if len(old_model_slice)-1 == -1:
+                    break
+                random_old_model = old_model_slice[len(old_model_slice)-1]
+                if from_the_start:
+                    last_old_model_number = len(old_model_slice)-1
                 if self.model_is_starter:
                     player_number = 1
                 else:
                     player_number = 0
                 last_game_was_victory = self.play_game(Player(random_old_model, player_number))
-                print(str(len(old_model_slice))+ '/'+ str(len(old_model_list)))
+                print(str(last_old_model_number+1)+ '/'+ str(len(old_model_list)))
                 if last_game_was_victory:
                     old_model_slice.remove(random_old_model)
                     if len(old_model_slice) == 0:
-                        test_games_won = 0
-                        for test_game_number in range(0, 100):
-                            if self.play_game(TestPlayer(player_number)):
-                                test_games_won = test_games_won + 1
-                        self.test_games_won = test_games_won
-                        self.thread_finished = True
-                        break
+                        if from_the_start:
+                            test_games_won = 0
+                            for test_game_number in range(0, 100):
+                                if self.play_game(TestPlayer(player_number)):
+                                    test_games_won = test_games_won + 1
+                            self.test_games_won = test_games_won
+                            self.thread_finished = True
+                            break
+                        else:
+                            from_the_start = True
                 else:
-                    self.model.fit({'input': np.array(self.training_inputs), 'allow': np.array(self.allowed_moves)}, {'finalmoveprobability': np.array(self.move_probabilities), 'winprobability': np.array(self.win_probabilities)})
+                    from_the_start = False
+                    self.model.train_on_batch({'input': np.array(self.training_inputs), 'allow': np.array(self.allowed_moves)}, {'finalmoveprobability': np.array(self.move_probabilities), 'winprobability': np.array(self.win_probabilities)})
 
     def play_game(self, player_with_old_ai: Player):
         board: Board

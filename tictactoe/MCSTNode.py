@@ -34,11 +34,11 @@ class MCSTNode(AbstractMCSTNode):
                 new_board = deepcopy(self.board)
                 game_feedback, game_not_finished = new_board.add_move(self.player_number, node_number)
                 if game_not_finished:
-                    self.sub_nodes.append(MCSTNode(self.p_values[node_number]/10, self.model, new_board, (self.player_number + 1) % 2, not self.is_own_move))
+                    self.sub_nodes.append(MCSTNode(self.p_values[node_number]/100, self.model, new_board, (self.player_number + 1) % 2, not self.is_own_move))
                 else:
                     if not self.is_own_move:
                         game_feedback = 0 - game_feedback
-                    self.sub_nodes.append(MCSTLeafNode(self.p_values[node_number]/10, game_feedback, not self.is_own_move))
+                    self.sub_nodes.append(MCSTLeafNode(self.p_values[node_number]/100, game_feedback, not self.is_own_move))
             self.is_not_existing = False
             return
         for sub_node_number in range(0, len(self.sub_nodes)):

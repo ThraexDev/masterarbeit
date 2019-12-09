@@ -57,7 +57,7 @@ class AITrainer:
         plt.show()
 
 
-trainer = AITrainer(1, 20)
+trainer = AITrainer(1, 30)
 trainer.run_training_session()
 
 
