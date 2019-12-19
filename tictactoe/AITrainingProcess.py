@@ -74,7 +74,7 @@ class AITrainingProcess(threading.Thread):
                     if len(old_model_slice) == 0:
                         if from_the_start:
                             test_games_won = 0
-                            for test_game_number in range(0, 100):
+                            for test_game_number in range(0, 10):
                                 if self.play_game(TestPlayer(player_number)):
                                     test_games_won = test_games_won + 1
                             self.test_games_won = test_games_won
@@ -108,6 +108,7 @@ class AITrainingProcess(threading.Thread):
         while game_not_finished:
             if current_ai_plays:
                 move_probability, player_input, allowed_moves = player_with_current_ai.calculate_turn(board)
+                print(move_probability)
                 training_input_current_player.append(player_input)
                 allowed_moves_current_player.append(allowed_moves)
                 move_probabilities_current_player.append(move_probability)
@@ -126,13 +127,13 @@ class AITrainingProcess(threading.Thread):
         if not current_ai_plays:
             win_probabilities_current_player = [[game_feedback]] * len(training_input_current_player)
             win_probabilities_old_player = [[0.0-game_feedback]] * len(training_input_old_player)
-            if game_feedback == 1:
+            if game_feedback > 0:
                 game_won = True
             #move_probabilities_player1 = [[0.0001] * 9] * len(training_input_player1)
         else:
             win_probabilities_current_player = [[0.0-game_feedback]] * len(training_input_current_player)
             win_probabilities_old_player = [[game_feedback]] * len(training_input_old_player)
-            if game_feedback == -1:
+            if game_feedback < 0:
                 game_won = True
             #move_probabilities_player0 = [[0.0001] * 9] * len(training_input_player0)
         self.training_inputs.extend(training_input_current_player)

@@ -24,7 +24,7 @@ class MCSTNode(AbstractMCSTNode):
         self.p_values = prediction[0].numpy().tolist()[0]
         self.v_value = prediction[1].numpy().tolist()[0][0]
         # turn the win probability if it is the enemies move
-        if not is_own_move:
+        if is_own_move:
             self.v_value = 0.0 - self.v_value
 
     def expand(self):
@@ -44,6 +44,7 @@ class MCSTNode(AbstractMCSTNode):
         for sub_node_number in range(0, len(self.sub_nodes)):
             if self.board.get_allow()[sub_node_number] == 1:
                 best_node = self.sub_nodes[sub_node_number]
+                break
         for sub_node_number in range(0, len(self.sub_nodes)):
             if self.sub_nodes[sub_node_number].get_q_and_u_score() > best_node.get_q_and_u_score():
                 if self.board.get_allow()[sub_node_number] == 1:

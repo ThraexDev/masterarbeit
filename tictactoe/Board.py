@@ -24,13 +24,13 @@ class Board:
                 check_fields[2] == 1 and check_fields[5] == 1 and check_fields[8] == 1) or (
                 check_fields[0] == 1 and check_fields[4] == 1 and check_fields[8] == 1) or (
                 check_fields[2] == 1 and check_fields[4] == 1 and check_fields[6] == 1):
-            return 1, False
+            return 0.1, False
         if sum(self.get_allow()) == 0:
             game_not_finished = False
             if player_number == 0:
-                game_feedback = -1
+                game_feedback = -0.01
             else:
-                game_feedback = 1
+                game_feedback = 0.01
         return game_feedback, game_not_finished
 
     def get_input(self, player_number: int) -> list:

@@ -4,21 +4,20 @@ import tensorflow as tf
 from tictactoe.Board import Board
 from tictactoe.Player import Player
 
-
 input_layer = tf.keras.Input(shape=(27,), name='input')
 allowed_moves = tf.keras.Input(shape=(9,), name='allow')
-big_layer = tf.keras.layers.Dense(100, activation=tf.nn.tanh, name='big')(input_layer)
-middle = tf.keras.layers.Dense(27, activation=tf.nn.tanh, name='middle')(big_layer)
-moveprobability = tf.keras.layers.Dense(9, activation=tf.nn.sigmoid, name='moveprobability')(middle)
+big_layer = tf.keras.layers.Dense(200, activation=tf.nn.tanh, name='big')(input_layer)
+middle = tf.keras.layers.Dense(100, activation=tf.nn.tanh, name='middle')(big_layer)
+moveprobability = tf.keras.layers.Dense(9, activation=tf.nn.softmax, name='moveprobability')(middle)
 winprobability = tf.keras.layers.Dense(1, activation=tf.nn.tanh, name='winprobability')(middle)
 allowedcardprobability = tf.keras.layers.Multiply(name='finalmoveprobability')([allowed_moves, moveprobability])
 
 model = tf.keras.Model(inputs=[input_layer, allowed_moves],
                             outputs=[allowedcardprobability, winprobability])
-model.compile(optimizer='adam',
-                   loss=[tf.compat.v2.losses.CategoricalCrossentropy(), tf.compat.v2.losses.mean_squared_error],
+model.compile(optimizer=tf.compat.v2.keras.optimizers.Adam(learning_rate=0.01),
+                   loss=[tf.compat.v2.losses.mean_squared_error, tf.compat.v2.losses.mean_squared_error],
                    metrics=['accuracy'])
-model.load_weights("starter_12")
+model.load_weights("starter_4")
 
 ai_player = Player(model, 0)
 board = Board()

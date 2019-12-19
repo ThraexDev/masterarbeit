@@ -20,8 +20,8 @@ model.compile(optimizer='adam',
               metrics=['accuracy'])
 
 historywon = []
-vertifygames = 1000
-distanceofvertification = 100
+vertifygames = 100
+distanceofvertification = 1000
 
 class GameStateGenerator(tf.compat.v2.keras.utils.Sequence):
     def __init__(self, tfmodel):
@@ -125,36 +125,35 @@ class GameStateGenerator(tf.compat.v2.keras.utils.Sequence):
                             #############################################
                             selectedcards.append(selectedcard)
                             selectedbatches.append(selectedbatch)
-                        highestcardinbatches = []
-                        for batchnumber in range(0, amountofbatches):
-                            highestcardinbatches.append(max(batch[batchnumber]))
-                        for playernumber in range(1, playeramount):
+                        for playernumber in range(0, playeramount):
+                            highestcardinbatches = []
+                            for batchnumber in range(0, amountofbatches):
+                                highestcardinbatches.append(max(batch[batchnumber]))
                             lowestcard = min(selectedcards)
-                            playedcards[lowestcard] = 1
+                            playedcards[lowestcard - 1] = 1
                             playeroflowestcard = np.argmin(selectedcards)
                             playercards[playeroflowestcard][lowestcard - 1] = 0
-                            differencetocard = [lowestcard - highcardofbatch for highcardofbatch in highestcardinbatches]
+                            differencetocard = [lowestcard - highcardofbatch for highcardofbatch in
+                                                highestcardinbatches]
                             if max(differencetocard) < 0:
                                 playerbulls[playeroflowestcard] = playerbulls[playeroflowestcard] + self.calculatebulls(
                                     batch[selectedbatches[playeroflowestcard]])
                                 batch[selectedbatches[playeroflowestcard]] = [lowestcard]
-                                if np.argmax(playerbulls) <= 100:
+                                if max(playerbulls) >= 100:
                                     gamefinished = True
-                                    break
-                                continue
-                            for difference in range(0, len(differencetocard)):
-                                if differencetocard[difference] < 0:
-                                    differencetocard[difference] = 105
-                            assingedbatch = np.argmin(differencetocard)
-                            if len(batch[assingedbatch]) == 5:
-                                playerbulls[playeroflowestcard] = playerbulls[playeroflowestcard] + self.calculatebulls(
-                                    batch[assingedbatch])
-                                batch[assingedbatch] = [lowestcard]
-                                if np.argmax(playerbulls) <= 100:
-                                    gamefinished = True
-                                    break
                             else:
-                                batch[assingedbatch].append(lowestcard)
+                                for difference in range(0, len(differencetocard)):
+                                    if differencetocard[difference] < 0:
+                                        differencetocard[difference] = 105
+                                assingedbatch = np.argmin(differencetocard)
+                                if len(batch[assingedbatch]) == 5:
+                                    playerbulls[playeroflowestcard] = playerbulls[playeroflowestcard] + self.calculatebulls(
+                                        batch[assingedbatch])
+                                    batch[assingedbatch] = [lowestcard]
+                                    if max(playerbulls) >= 100:
+                                        gamefinished = True
+                                else:
+                                    batch[assingedbatch].append(lowestcard)
                             selectedcards[playeroflowestcard] = 105
                 bestplayer = np.argmin(playerbulls)
                 if bestplayer == 0:
@@ -218,34 +217,35 @@ class GameStateGenerator(tf.compat.v2.keras.utils.Sequence):
                     #############################################
                     selectedcards.append(selectedcard)
                     selectedbatches.append(selectedbatch)
-                highestcardinbatches = []
-                for batchnumber in range(0, amountofbatches):
-                    highestcardinbatches.append(max(batch[batchnumber]))
-                for playernumber in range(1, playeramount):
+                for playernumber in range(0, playeramount):
+                    highestcardinbatches = []
+                    for batchnumber in range(0, amountofbatches):
+                        highestcardinbatches.append(max(batch[batchnumber]))
                     lowestcard = min(selectedcards)
-                    playedcards[lowestcard] = 1
+                    playedcards[lowestcard - 1] = 1
                     playeroflowestcard = np.argmin(selectedcards)
-                    differencetocard = [lowestcard - highcardofbatch for highcardofbatch in highestcardinbatches]
-                    playercards[playeroflowestcard][lowestcard-1] = 0
+                    playercards[playeroflowestcard][lowestcard - 1] = 0
+                    differencetocard = [lowestcard - highcardofbatch for highcardofbatch in
+                                        highestcardinbatches]
                     if max(differencetocard) < 0:
-                        playerbulls[playeroflowestcard] = playerbulls[playeroflowestcard] + self.calculatebulls(batch[selectedbatches[playeroflowestcard]])
+                        playerbulls[playeroflowestcard] = playerbulls[playeroflowestcard] + self.calculatebulls(
+                            batch[selectedbatches[playeroflowestcard]])
                         batch[selectedbatches[playeroflowestcard]] = [lowestcard]
-                        if np.argmax(playerbulls) <= 100:
+                        if max(playerbulls) >= 100:
                             gamefinished = True
-                            break
-                        continue
-                    for difference in range(0, len(differencetocard)):
-                        if differencetocard[difference] < 0:
-                            differencetocard[difference] = 105
-                    assingedbatch = np.argmin(differencetocard)
-                    if len(batch[assingedbatch]) == 5:
-                        playerbulls[playeroflowestcard] = playerbulls[playeroflowestcard] + self.calculatebulls(batch[assingedbatch])
-                        batch[assingedbatch] = [lowestcard]
-                        if np.argmax(playerbulls) <= 100:
-                            gamefinished = True
-                            break
                     else:
-                        batch[assingedbatch].append(lowestcard)
+                        for difference in range(0, len(differencetocard)):
+                            if differencetocard[difference] < 0:
+                                differencetocard[difference] = 105
+                        assingedbatch = np.argmin(differencetocard)
+                        if len(batch[assingedbatch]) == 5:
+                            playerbulls[playeroflowestcard] = playerbulls[playeroflowestcard] + self.calculatebulls(
+                                batch[assingedbatch])
+                            batch[assingedbatch] = [lowestcard]
+                            if max(playerbulls) >= 100:
+                                gamefinished = True
+                        else:
+                            batch[assingedbatch].append(lowestcard)
                     selectedcards[playeroflowestcard] = 105
         bestplayer = np.argmin(playerbulls)
         worstplayer = np.argmax(playerbulls)
@@ -277,6 +277,7 @@ generator = GameStateGenerator(model)
 
 model.fit_generator(generator=generator, epochs=1, workers=10, max_queue_size=10, verbose=1, shuffle=False)
 
+model.save_weights('6model')
 N = 1
 cumsum, moving_aves_won = [0], []
 for i, x in enumerate(historywon, 1):
