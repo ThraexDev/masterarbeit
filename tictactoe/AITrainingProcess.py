@@ -17,15 +17,16 @@ class AITrainingProcess(threading.Thread):
         allowed_moves = tf.keras.Input(shape=(9,), name='allow')
         big_layer = tf.keras.layers.Dense(100, activation=tf.nn.tanh, name='big')(input_layer)
         middle = tf.keras.layers.Dense(27, activation=tf.nn.tanh, name='middle')(big_layer)
-        moveprobability = tf.keras.layers.Dense(9, activation=tf.nn.softmax, name='moveprobability')(middle)
+        moveprobability = tf.keras.layers.Dense(9, activation=tf.nn.sigmoid, name='moveprobability')(middle)
         winprobability = tf.keras.layers.Dense(1, activation=tf.nn.tanh, name='winprobability')(middle)
         allowedcardprobability = tf.keras.layers.Multiply(name='finalmoveprobability')([allowed_moves, moveprobability])
 
         self.model = tf.keras.Model(inputs=[input_layer, allowed_moves],
                                outputs=[allowedcardprobability, winprobability])
-        self.model.compile(optimizer='adam',
-                      loss=[tf.compat.v2.losses.mean_squared_error, tf.compat.v2.losses.mean_squared_error],
+        self.model.compile(optimizer='Adam',
+                      loss=[tf.nn.softmax_cross_entropy_with_logits, tf.compat.v2.losses.mean_squared_error],
                       metrics=['accuracy'])
+
         self.model_is_starter = is_starter
         self.training_inputs = []
         self.allowed_moves = []
@@ -121,7 +122,7 @@ class AITrainingProcess(threading.Thread):
                 move_probabilities_old_player.append(move_probability)
                 current_ai_plays = True
                 player_number = player_with_old_ai.get_player_number()
-            move = np.argmax(move_probability)
+            move = int(np.random.choice(9, p=move_probability))
             game_feedback, game_not_finished = board.add_move(player_number, move)
         game_won = False
         if not current_ai_plays:

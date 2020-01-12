@@ -9,6 +9,9 @@ from tictactoe.Board import Board
 from tictactoe.Player import Player
 from tictactoe.TestPlayer import TestPlayer
 
+print("Num GPUs Available: ", tf.config.experimental.list_physical_devices())
+print(tf.test.is_gpu_available())
+
 input_layer = tf.keras.Input(shape=(27,), name='input')
 allowed_moves = tf.keras.Input(shape=(9,), name='allow')
 big_layer = tf.keras.layers.Dense(100, activation=tf.nn.tanh, name='big')(input_layer)
@@ -19,8 +22,8 @@ allowedcardprobability = tf.keras.layers.Multiply(name='finalmoveprobability')([
 
 model = tf.keras.Model(inputs=[input_layer, allowed_moves],
                             outputs=[allowedcardprobability, winprobability])
-model.compile(optimizer='adam',
-                   loss=[tf.compat.v2.losses.mean_squared_error, tf.compat.v2.losses.mean_squared_error],
+model.compile(optimizer='Adam',
+                   loss=[tf.keras.losses.categorical_crossentropy, tf.compat.v2.losses.mean_squared_error],
                    metrics=['accuracy'])
 
 game_history_starter = []
@@ -49,11 +52,11 @@ class GameStateGenerator(tf.compat.v2.keras.utils.Sequence):
                     if ai_0_plays:
                         move_probability, player_input, allowed_moves_input = player0.calculate_turn(board)
                         game_feedback, game_not_finished = board.add_move(player0.get_player_number(),
-                                                                               int(np.argmax(move_probability)))
+                                                                               int(np.random.choice(9, p=move_probability)))
                     else:
                         move_probability, player_input, allowed_moves_input = player1.calculate_turn(board)
                         game_feedback, game_not_finished = board.add_move(player1.get_player_number(),
-                                                                               int(np.argmax(move_probability)))
+                                                                               int(np.random.choice(9, p=move_probability)))
                 if ai_0_plays:
                     won_games = won_games + game_feedback
                 else:
@@ -75,11 +78,11 @@ class GameStateGenerator(tf.compat.v2.keras.utils.Sequence):
                     if ai_0_plays:
                         move_probability, player_input, allowed_moves_input = player0.calculate_turn(board)
                         game_feedback, game_not_finished = board.add_move(player0.get_player_number(),
-                                                                               int(np.argmax(move_probability)))
+                                                                               int(np.random.choice(9, p=move_probability)))
                     else:
                         move_probability, player_input, allowed_moves_input = player1.calculate_turn(board)
                         game_feedback, game_not_finished = board.add_move(player1.get_player_number(),
-                                                                               int(np.argmax(move_probability)))
+                                                                               int(np.random.choice(9, p=move_probability)))
                 if ai_0_plays:
                     won_games = won_games + game_feedback
                 else:
@@ -107,13 +110,13 @@ class GameStateGenerator(tf.compat.v2.keras.utils.Sequence):
                 training_input_player0.append(player_input)
                 allowed_moves_player0.append(allowed_moves_input)
                 move_probabilities_player0.append(move_probability)
-                game_feedback, game_not_finished = board.add_move(player0.get_player_number(), int(np.argmax(move_probability)))
+                game_feedback, game_not_finished = board.add_move(player0.get_player_number(), int(np.random.choice(9, p=move_probability)))
             else:
                 move_probability, player_input, allowed_moves_input = player1.calculate_turn(board)
                 training_input_player1.append(player_input)
                 allowed_moves_player1.append(allowed_moves_input)
                 move_probabilities_player1.append(move_probability)
-                game_feedback, game_not_finished = board.add_move(player1.get_player_number(), int(np.argmax(move_probability)))
+                game_feedback, game_not_finished = board.add_move(player1.get_player_number(), int(np.random.choice(9, p=move_probability)))
 
         if ai_0_plays:
             win_probabilities_player0 = [[game_feedback]] * len(training_input_player0)
