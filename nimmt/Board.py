@@ -21,29 +21,48 @@ class Board:
             for cardnumber in range(0, cardshandedtoeachplayer):
                 cardnotset = True
                 while cardnotset:
-                    randomcard = random.randint(1, cardamount)
+                    randomcard = random.randint(0, cardamount-1)
                     if randomcard not in cardshandedout:
-                        self.playercards[playernumber][randomcard - 1] = 1
+                        self.playercards[playernumber][randomcard] = 1
                         cardshandedout.append(randomcard)
                         cardnotset = False
         for batchnumber in range(0, amountofbatches):
             self.batch.append([])
             cardnotset = True
             while cardnotset:
-                randomcard = self.random.randint(1, cardamount)
+                randomcard = random.randint(0, cardamount-1)
                 if randomcard not in cardshandedout:
-                    self.playedcards[randomcard - 1] = 1
+                    self.playedcards[randomcard] = 1
                     self.batch[batchnumber].append(randomcard)
                     cardshandedout.append(randomcard)
                     cardnotset = False
 
-    def add_move(self, player_number: int, move: int) -> (int, bool):
+    def add_move(self, selected_moves: list) -> (int, bool):
+        selectedcards = []
+        selectedbatches = []
+        for player_number in range(0, len(selected_moves)):
+            selected_card = selected_moves[player_number] % self.cardamount
+            selected_batch = int((selected_moves[player_number] - selected_card) / self.cardamount)
+            selectedcards.append(selected_card)
+            selectedbatches.append(selected_batch)
+        for number in range(0, len(selected_moves)):
+            player_of_lowest_card = np.argmin(selectedcards)
+            self.add_move_for_player(player_of_lowest_card, selectedcards[player_of_lowest_card], selectedbatches[player_of_lowest_card])
+            selectedcards[player_of_lowest_card] = self.cardamount + 1
+        game_not_finished = True
+        sum_of_not_played_cards = 0
+        for player in range(0, self.playeramount):
+            sum_of_not_played_cards = sum_of_not_played_cards + sum(self.playercards[player])
+        if sum_of_not_played_cards == 0:
+            game_not_finished = False
+        return game_not_finished
+
+    def add_move_for_player(self, player_number: int, selected_card: int, selected_batch: int) -> (int, bool):
         highestcardinbatches = []
-        selected_card = move % 10
-        selected_batch = int((move - selected_card) / 10)
-        for batchnumber in range(0, amountofbatches):
+        for batchnumber in range(0, self.amountofbatches):
             highestcardinbatches.append(max(self.batch[batchnumber]))
         self.playedcards[selected_card] = 1
+        print(self.playercards[player_number][selected_card])
         self.playercards[player_number][selected_card] = 0
         differencetocard = [selected_card - highcardofbatch for highcardofbatch in
                             highestcardinbatches]
@@ -59,18 +78,6 @@ class Board:
                 self.batch[assingedbatch] = [selected_card]
             else:
                 self.batch[assingedbatch].append(selected_card)
-        game_not_finished = True
-        game_feedback = 0
-        if min(self.playerbulls) == self.playerbulls[player_number]:
-            game_feedback = 1
-        if max(self.playerbulls) == self.playerbulls[player_number]:
-            game_feedback = -1
-        sum_of_not_played_cards = 0
-        for player in range(0, playeramount):
-            sum_of_not_played_cards = sum_of_not_played_cards + sum(self.playercards[player])
-        if sum_of_not_played_cards == 0:
-            game_not_finished = False
-        return game_feedback, game_not_finished
 
     def get_input(self, player_number: int) -> list:
         situationvector = []
@@ -80,7 +87,7 @@ class Board:
         numberofcardsvector[numberofcardsonhand] = 1
         situationvector.extend(numberofcardsvector)
         for batchnumber in range(0, len(self.batch)):
-            batchvector = [0] * cardamount
+            batchvector = [0] * self.cardamount
             batchvector[max(self.batch[batchnumber]) - 1] = 1
             situationvector.extend(batchvector)
             numberofcardsvector = [0] * 5
@@ -91,20 +98,15 @@ class Board:
             situationvector.extend(bullvector)
         situationvector.extend(self.playedcards)
         situationvector.extend(self.get_bull_vector(player_number))
-        for player in range(0, playeramount):
+        for player in range(0, self.playeramount):
             if player != player_number:
                 situationvector.extend(self.get_bull_vector(player))
         return situationvector
 
     def get_allow(self, player_number) -> list:
         allow_vector = []
-        cards_not_played = sum(self.playercards[player_number])
-        played_cards = cardshandedtoeachplayer - cards_not_played
-        for player in range(0, playeramount):
-            allow = [1] * cards_not_played
-            allow_vector.extend(allow)
-            not_allow_vector = [0] * played_cards
-            allow_vector.extend(not_allow_vector)
+        for batch_number in range(0, self.amountofbatches):
+            allow_vector.extend(self.playercards[player_number])
         return allow_vector
 
     def calculatebulls(self, batch):
@@ -146,3 +148,21 @@ class Board:
             bull_vector[9] = 1
         return bull_vector
 
+    def get_feedback_for_player(self, player_number: int) -> int:
+        if self.playerbulls[player_number] == min(self.playerbulls):
+            return 1
+        if self.playerbulls[player_number] == max(self.playerbulls):
+            return -1
+        return 0
+
+    def get_enemy_moves(self, player_number, probabilities):
+        enemy_moves = []
+        enemy_cards = []
+        while len(enemy_moves) < (self.playeramount - 1):
+            enemy_move = np.argmax(probabilities)
+            probabilities[enemy_move] = 0
+            selected_card = enemy_move % self.cardamount
+            if selected_card not in enemy_cards and self.playercards[player_number][selected_card] == 0 and self.playedcards[selected_card] == 0:
+                enemy_cards.append(selected_card)
+                enemy_moves.append(enemy_move)
+        return enemy_moves

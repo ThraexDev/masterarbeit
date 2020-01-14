@@ -1,4 +1,4 @@
-from tictactoe.MCSTNodeInterface import AbstractMCSTNode
+from nimmt.MCSTNodeInterface import AbstractMCSTNode
 
 
 class MCSTLeafNode(AbstractMCSTNode):

@@ -1,8 +1,8 @@
 import numpy as np
 import tensorflow as tf
 
-from tictactoe.Board import Board
-from tictactoe.Player import Player
+from nimmt.Board import Board
+from nimmt.Player import Player
 
 input_layer = tf.keras.Input(shape=(27,), name='input')
 allowed_moves = tf.keras.Input(shape=(9,), name='allow')

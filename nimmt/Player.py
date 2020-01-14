@@ -1,6 +1,5 @@
-from tictactoe.Board import Board
-from tictactoe.MCSTRootNode import MCSTRootNode
-import numpy as np
+from nimmt.Board import Board
+from nimmt.MCSTRootNode import MCSTRootNode
 
 
 class Player:
@@ -11,7 +10,7 @@ class Player:
     def calculate_turn(self, board: Board):
         monte_carlo_search_tree = MCSTRootNode(self.model, board, self.player_number)
         result = monte_carlo_search_tree.get_result()
-        allow = board.get_allow()
+        allow = board.get_allow(self.player_number)
         return [result[i]*allow[i] for i in range(len(result))], board.get_input(self.player_number), allow
 
     def get_player_number(self) -> int:

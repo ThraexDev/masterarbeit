@@ -1,10 +1,10 @@
-from tictactoe.MCSTNode import MCSTNode
+from nimmt.MCSTNode import MCSTNode
 
 
 class MCSTRootNode:
 
     def __init__(self, model, board, player_number):
-        self.root_node = MCSTNode(0, model, board, player_number, True)
+        self.root_node = MCSTNode(0, model, board, player_number)
 
     def get_result(self):
         for i in range(0, 11):
