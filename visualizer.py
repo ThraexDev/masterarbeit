@@ -1,8 +1,8 @@
 import matplotlib.pyplot as plt
-f = open("tictactoe/starter.txt", "r")
+f = open("nimmt/result/starter.txt", "r")
 text = f.read()
 historywon = list(map(float, text[1:-1].split(", ")))
-N = 200
+N = 10
 cumsum, moving_aves_won = [0], []
 for i, x in enumerate(historywon, 1):
     cumsum.append(cumsum[i-1] + x)

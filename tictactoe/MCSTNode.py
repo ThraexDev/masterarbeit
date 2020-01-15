@@ -3,8 +3,8 @@ import numpy as np
 
 from copy import deepcopy
 
-from nimmt.MCSTLeafNode import MCSTLeafNode
-from nimmt.MCSTNodeInterface import AbstractMCSTNode
+from tictactoe.MCSTLeafNode import MCSTLeafNode
+from tictactoe.MCSTNodeInterface import AbstractMCSTNode
 
 
 class MCSTNode(AbstractMCSTNode):
@@ -35,14 +35,17 @@ class MCSTNode(AbstractMCSTNode):
             if not self.is_own_move:
                 self.v_value = 0.0 - self.v_value
             for node_number in range(0, len(self.p_values)):
-                new_board = deepcopy(self.board)
-                game_feedback, game_not_finished = new_board.add_move(self.player_number, node_number)
-                if game_not_finished:
-                    self.sub_nodes.append(MCSTNode(self.p_values[node_number], self.model, new_board, (self.player_number + 1) % 2, not self.is_own_move))
+                if self.p_values[node_number] > 0:
+                    new_board = deepcopy(self.board)
+                    game_feedback, game_not_finished = new_board.add_move(self.player_number, node_number)
+                    if game_not_finished:
+                        self.sub_nodes.append(MCSTNode(self.p_values[node_number], self.model, new_board, (self.player_number + 1) % 2, not self.is_own_move))
+                    else:
+                        if not self.is_own_move:
+                            game_feedback = 0 - game_feedback
+                        self.sub_nodes.append(MCSTLeafNode(self.p_values[node_number], game_feedback, not self.is_own_move))
                 else:
-                    if not self.is_own_move:
-                        game_feedback = 0 - game_feedback
-                    self.sub_nodes.append(MCSTLeafNode(self.p_values[node_number], game_feedback, not self.is_own_move))
+                    self.sub_nodes.append(MCSTLeafNode(self.p_values[node_number], 0, not self.is_own_move))
             self.is_not_existing = False
             return
         for sub_node_number in range(0, len(self.sub_nodes)):

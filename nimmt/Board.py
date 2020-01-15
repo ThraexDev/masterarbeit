@@ -4,7 +4,8 @@ import numpy as np
 
 class Board:
 
-    def __init__(self, cardshandedtoeachplayer, playeramount, cardamount, amountofbatches):
+    def __init__(self, cardshandedtoeachplayer, playeramount, cardamount, amountofbatches, maxbatchcards):
+        self.maxbatchcards = maxbatchcards
         self.cardshandedtoeachplayer = cardshandedtoeachplayer
         self.playeramount = playeramount
         self.cardamount = cardamount
@@ -50,19 +51,16 @@ class Board:
             self.add_move_for_player(player_of_lowest_card, selectedcards[player_of_lowest_card], selectedbatches[player_of_lowest_card])
             selectedcards[player_of_lowest_card] = self.cardamount + 1
         game_not_finished = True
-        sum_of_not_played_cards = 0
         for player in range(0, self.playeramount):
-            sum_of_not_played_cards = sum_of_not_played_cards + sum(self.playercards[player])
-        if sum_of_not_played_cards == 0:
-            game_not_finished = False
+            if sum(self.playercards[player]) == 0:
+                game_not_finished = False
         return game_not_finished
 
-    def add_move_for_player(self, player_number: int, selected_card: int, selected_batch: int) -> (int, bool):
+    def add_move_for_player(self, player_number: int, selected_card: int, selected_batch: int):
         highestcardinbatches = []
         for batchnumber in range(0, self.amountofbatches):
             highestcardinbatches.append(max(self.batch[batchnumber]))
         self.playedcards[selected_card] = 1
-        print(self.playercards[player_number][selected_card])
         self.playercards[player_number][selected_card] = 0
         differencetocard = [selected_card - highcardofbatch for highcardofbatch in
                             highestcardinbatches]
@@ -71,8 +69,11 @@ class Board:
                 self.batch[selected_batch])
             self.batch[selected_batch] = [selected_card]
         else:
+            for difference in range(0, len(differencetocard)):
+                if differencetocard[difference] < 0:
+                    differencetocard[difference] = self.cardamount + 1
             assingedbatch = np.argmin(differencetocard)
-            if len(self.batch[assingedbatch]) == 5:
+            if len(self.batch[assingedbatch]) == self.maxbatchcards:
                 self.playerbulls[player_number] = self.playerbulls[player_number] + self.calculatebulls(
                     self.batch[assingedbatch])
                 self.batch[assingedbatch] = [selected_card]
@@ -149,10 +150,12 @@ class Board:
         return bull_vector
 
     def get_feedback_for_player(self, player_number: int) -> int:
-        if self.playerbulls[player_number] == min(self.playerbulls):
-            return 1
+        if min(self.playerbulls) == max(self.playerbulls):
+            return 0
         if self.playerbulls[player_number] == max(self.playerbulls):
             return -1
+        if self.playerbulls[player_number] == min(self.playerbulls):
+            return 1
         return 0
 
     def get_enemy_moves(self, player_number, probabilities):

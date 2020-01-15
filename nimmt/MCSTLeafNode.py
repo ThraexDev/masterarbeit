@@ -6,10 +6,9 @@ class MCSTLeafNode(AbstractMCSTNode):
     def get_visit_counter(self):
         return self.visit_counter
 
-    def __init__(self, p_value, v_value, is_own_move):
+    def __init__(self, p_value, v_value):
         self.p_value = p_value
         self.v_value = v_value
-        self.is_own_move = is_own_move
         self.visit_counter = 0
         self.is_not_existing = True
 

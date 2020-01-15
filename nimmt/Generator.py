@@ -13,11 +13,12 @@ print("Num GPUs Available: ", tf.config.experimental.list_physical_devices())
 print(tf.test.is_gpu_available())
 
 cardshandedtoeachplayer = 10
-playeramount = 4
-cardamount = 105
-amountofbatches = 4
+playeramount = 3
+cardamount = 61
+amountofbatches = 3
+maxbatchcards = 5
 
-input_layer = tf.keras.Input(shape=(800,), name='input')
+input_layer = tf.keras.Input(shape=(435,), name='input')
 allowed_moves = tf.keras.Input(shape=(cardamount*amountofbatches,), name='allow')
 big_layer = tf.keras.layers.Dense(800, activation=tf.nn.tanh, name='big')(input_layer)
 middle = tf.keras.layers.Dense(200, activation=tf.nn.tanh, name='middle')(big_layer)
@@ -41,20 +42,20 @@ class GameStateGenerator(tf.compat.v2.keras.utils.Sequence):
         self.model = tfmodel
 
     def __len__(self):
-        return 100001
+        return 10001
 
     def __getitem__(self, item):
-        if item % 1000 == 0:
-            model.save_weights("result/model" + str(item))
+        if item % 100 == 0:
+            model.save_weights("result2/model" + str(item))
             won_games = 0
             for test_number in range(0, 10):
-                board = Board(cardshandedtoeachplayer, playeramount, cardamount, amountofbatches)
+                board = Board(cardshandedtoeachplayer, playeramount, cardamount, amountofbatches, maxbatchcards)
                 players = []
                 for player_number in range(0, playeramount):
                     if player_number == 0:
                         players.append(Player(model, player_number))
                     else:
-                        players.append(TestPlayer(1))
+                        players.append(TestPlayer(player_number))
                 game_not_finished = True
                 while game_not_finished:
                     selected_moves = []
@@ -67,10 +68,10 @@ class GameStateGenerator(tf.compat.v2.keras.utils.Sequence):
                 game_feedback = board.get_feedback_for_player(0)
                 won_games = won_games + game_feedback
             game_history_starter.append(won_games)
-            f = open("result/starter.txt", "w")
+            f = open("result2/starter.txt", "w")
             f.write(str(game_history_starter))
             f.close()
-        board = Board(cardshandedtoeachplayer, playeramount, cardamount, amountofbatches)
+        board = Board(cardshandedtoeachplayer, playeramount, cardamount, amountofbatches, maxbatchcards)
         players = []
         training_input = []
         allowed_moves_input = []
@@ -104,19 +105,18 @@ class GameStateGenerator(tf.compat.v2.keras.utils.Sequence):
             game_feedback = board.get_feedback_for_player(player_number)
             win_probability = [game_feedback] * cardshandedtoeachplayer
             win_probabilities.append(win_probability)
-        # final_input = []
-        # final_allow = []
-        # final_move = []
-        # final_win = []
-        # final_input.extend(training_input_player0)
-        # final_input.extend(training_input_player1)
-        # final_allow.extend(allowed_moves_player0)
-        # final_allow.extend(allowed_moves_player1)
-        # final_move.extend(move_probabilities_player0)
-        # final_move.extend(move_probabilities_player1)
-        # final_win.extend(win_probabilities_player0)
-        # final_win.extend(win_probabilities_player1)
-        return {'input': np.array(training_input), 'allow': np.array(allowed_moves_input)}, {'finalmoveprobability': np.array(move_probabilities), 'winprobability': np.array(win_probabilities), 'enemyprobabilitysoftmax': np.array(enemy_probabilities)}
+        final_input = []
+        final_allow = []
+        final_move = []
+        final_win = []
+        final_enemy = []
+        for player_number in range(0, playeramount):
+            final_input.extend(training_input[player_number])
+            final_allow.extend(allowed_moves_input[player_number])
+            final_move.extend(move_probabilities[player_number])
+            final_win.extend(win_probabilities[player_number])
+            final_enemy.extend(enemy_probabilities[player_number])
+        return {'input': np.array(final_input), 'allow': np.array(final_allow)}, {'finalmoveprobability': np.array(final_move), 'winprobability': np.array(final_win), 'enemyprobabilitysoftmax': np.array(final_enemy)}
 
 
 generator = GameStateGenerator(model)

@@ -33,23 +33,24 @@ class MCSTNode(AbstractMCSTNode):
             enemy_move_probabilities = prediction[2].numpy().tolist()[0]
             self.enemy_moves = self.board.get_enemy_moves(self.player_number, enemy_move_probabilities)
             for node_number in range(0, len(self.p_values)):
-                new_board = deepcopy(self.board)
-                selected_moves = deepcopy(self.enemy_moves)
-                selected_moves.insert(self.player_number, node_number)
-                game_not_finished = new_board.add_move(selected_moves)
-                if game_not_finished:
-                    self.sub_nodes.append(MCSTNode(self.p_values[node_number], self.model, new_board, self.player_number))
+                if self.p_values[node_number] > 0:
+                    new_board = deepcopy(self.board)
+                    selected_moves = deepcopy(self.enemy_moves)
+                    selected_moves.insert(self.player_number, node_number)
+                    game_not_finished = new_board.add_move(selected_moves)
+                    if game_not_finished:
+                        self.sub_nodes.append(MCSTNode(self.p_values[node_number], self.model, new_board, self.player_number))
+                    else:
+                        game_feedback = new_board.get_feedback_for_player(self.player_number)
+                        self.sub_nodes.append(MCSTLeafNode(self.p_values[node_number], game_feedback))
                 else:
-                    game_feedback = new_board.get_feedback_for_player(self.player_number)
-                    self.sub_nodes.append(MCSTLeafNode(self.p_values[node_number], game_feedback))
+                    self.sub_nodes.append(MCSTLeafNode(self.p_values[node_number], 0))
             self.is_not_existing = False
             return
         for sub_node_number in range(0, len(self.sub_nodes)):
             if self.board.get_allow(self.player_number)[sub_node_number] == 1:
                 best_node = self.sub_nodes[sub_node_number]
                 break
-        if sum(self.board.get_allow(self.player_number)) == 0:
-            print(sum(self.board.get_allow(self.player_number)))
         for sub_node_number in range(0, len(self.sub_nodes)):
             if self.sub_nodes[sub_node_number].get_q_and_u_score() > best_node.get_q_and_u_score():
                 if self.board.get_allow(self.player_number)[sub_node_number] == 1:
