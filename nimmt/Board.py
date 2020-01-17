@@ -129,23 +129,23 @@ class Board:
         bulls = self.playerbulls[player_number]
         if bulls == 0:
             bull_vector[0] = 1
-        if 0 < bulls < 10:
+        if 0 < bulls < 1:
             bull_vector[1] = 1
-        if 10 < bulls < 20:
+        if 1 < bulls < 2:
             bull_vector[2] = 1
-        if 20 < bulls < 30:
+        if 2 < bulls < 4:
             bull_vector[3] = 1
-        if 30 < bulls < 40:
+        if 4 < bulls < 7:
             bull_vector[4] = 1
-        if 40 < bulls < 50:
+        if 7 < bulls < 10:
             bull_vector[5] = 1
-        if 50 < bulls < 60:
+        if 10 < bulls < 15:
             bull_vector[6] = 1
-        if 60 < bulls < 70:
+        if 15 < bulls < 25:
             bull_vector[7] = 1
-        if 70 < bulls < 80:
+        if 25 < bulls < 40:
             bull_vector[8] = 1
-        if bulls > 80:
+        if bulls > 40:
             bull_vector[9] = 1
         return bull_vector
 

@@ -5,12 +5,12 @@ from nimmt.Board import Board
 from nimmt.Player import Player
 
 cardshandedtoeachplayer = 10
-playeramount = 2
-cardamount = 51
-amountofbatches = 2
-maxbatchcards = 3
+playeramount = 3
+cardamount = 61
+amountofbatches = 3
+maxbatchcards = 5
 
-input_layer = tf.keras.Input(shape=(294,), name='input')
+input_layer = tf.keras.Input(shape=(435,), name='input')
 allowed_moves = tf.keras.Input(shape=(cardamount*amountofbatches,), name='allow')
 big_layer = tf.keras.layers.Dense(800, activation=tf.nn.tanh, name='big')(input_layer)
 middle = tf.keras.layers.Dense(200, activation=tf.nn.tanh, name='middle')(big_layer)
@@ -25,7 +25,7 @@ model = tf.keras.Model(inputs=[input_layer, allowed_moves],
 model.compile(optimizer='Adam',
                    loss=[tf.keras.losses.categorical_crossentropy, tf.compat.v2.losses.mean_squared_error, tf.keras.losses.categorical_crossentropy],
                    metrics=['accuracy'])
-model.load_weights("result/model3600")
+model.load_weights("result4/model3500")
 
 board = Board(cardshandedtoeachplayer, playeramount, cardamount, amountofbatches, maxbatchcards)
 players = []
@@ -53,6 +53,15 @@ while game_not_finished:
         else:
             move_probability, player_input, allowed_move_input = players[player_number].calculate_turn(
                 board)
+            prediction = model.predict_on_batch({'input': np.array([board.get_input(player_number)]),
+                                                 'allow': np.array([board.get_allow(player_number)]).astype(float)})
+            p_values = prediction[0].numpy().tolist()[0]
+            v_value = prediction[1].numpy().tolist()[0][0]
+            enemy_move_probabilities = prediction[2].numpy().tolist()[0]
+            print(v_value)
+            enemy_moves = board.get_enemy_moves(player_number, enemy_move_probabilities)
+            for move in enemy_moves:
+                print(move % cardamount)
             selected_move = int(np.random.choice(len(move_probability), p=move_probability))
         selected_moves.append(selected_move)
     game_not_finished = board.add_move(selected_moves)
