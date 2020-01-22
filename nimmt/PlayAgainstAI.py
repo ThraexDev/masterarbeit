@@ -25,7 +25,7 @@ model = tf.keras.Model(inputs=[input_layer, allowed_moves],
 model.compile(optimizer='Adam',
                    loss=[tf.keras.losses.categorical_crossentropy, tf.compat.v2.losses.mean_squared_error, tf.keras.losses.categorical_crossentropy],
                    metrics=['accuracy'])
-model.load_weights("result4/model3500")
+model.load_weights("result4/model10000")
 
 board = Board(cardshandedtoeachplayer, playeramount, cardamount, amountofbatches, maxbatchcards)
 players = []

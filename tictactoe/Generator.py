@@ -37,8 +37,8 @@ class GameStateGenerator(tf.compat.v2.keras.utils.Sequence):
         return 100001
 
     def __getitem__(self, item):
-        if item % 100 == 0:
-            model.save_weights("results/model" + str(item))
+        if item % 1000 == 0:
+            model.save_weights("results2/model" + str(item))
             won_games = 0
             for test_number in range(0, 10):
                 board = Board()
@@ -62,7 +62,7 @@ class GameStateGenerator(tf.compat.v2.keras.utils.Sequence):
                 else:
                     won_games = won_games - game_feedback
             game_history_no_starter.append(won_games)
-            f = open("results/nostarter.txt", "w")
+            f = open("results2/nostarter.txt", "w")
             f.write(str(game_history_no_starter))
             f.close()
             won_games = 0
@@ -88,7 +88,7 @@ class GameStateGenerator(tf.compat.v2.keras.utils.Sequence):
                 else:
                     won_games = won_games - game_feedback
             game_history_starter.append(won_games)
-            f = open("results/starter.txt", "w")
+            f = open("results2/starter.txt", "w")
             f.write(str(game_history_starter))
             f.close()
         board = Board()

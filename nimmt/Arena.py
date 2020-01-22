@@ -29,10 +29,17 @@ def make_model(model_path: str):
     model.load_weights(model_path)
     return model
 
-new_model = make_model("result4/model4300")
-old_model = make_model("result4/model0")
+new_model = make_model("result4/model10000")
+old_model = make_model("result4/model10000")
 won_games = 0
-for test_number in range(0, 300):
+recorded_moves = []
+recorded_bulls = []
+recorded_batch_length = []
+for i in range(0, cardshandedtoeachplayer):
+    recorded_moves.append([])
+    recorded_bulls.append([])
+    recorded_batch_length.append([])
+for test_number in range(0, 100):
     print("game: "+str(test_number))
     board = Board(cardshandedtoeachplayer, playeramount, cardamount, amountofbatches, maxbatchcards)
     players = []
@@ -42,15 +49,35 @@ for test_number in range(0, 300):
         else:
             players.append(Player(old_model, player_number))
     game_not_finished = True
+    move_number = 0
     while game_not_finished:
         selected_moves = []
+        bull_sum = 0
+        batch_length = 0
         for player_number in range(0, playeramount):
             move_probability, player_input, allowed_move_input = players[player_number].calculate_turn(
                 board)
             selected_move = int(np.random.choice(len(move_probability), p=move_probability))
             selected_moves.append(selected_move)
+            recorded_moves[move_number].append(selected_move % cardamount)
         game_not_finished = board.add_move(selected_moves)
+        for player_number in range(0, playeramount):
+            bull_sum = bull_sum + board.playerbulls[player_number]
+        recorded_bulls[move_number].append(bull_sum)
+        for i in range(0, amountofbatches):
+            batch_length = batch_length + len(board.batch[i])
+        recorded_batch_length[move_number].append(batch_length)
+        move_number = move_number + 1
     game_feedback = board.get_feedback_for_player(0)
     won_games = won_games + game_feedback
 
 print(won_games)
+print('--------')
+for recorded_move in recorded_moves:
+    print('average card: '+str(sum(recorded_move)/(100*playeramount)))
+print('--------')
+for recorded_bull in recorded_bulls:
+    print('average bull: '+str(sum(recorded_bull)/(100*playeramount)))
+print('--------')
+for recorded_batch in recorded_batch_length:
+    print('average batch length: '+str(sum(recorded_batch)/(100*amountofbatches)))
