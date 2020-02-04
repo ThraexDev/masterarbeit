@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-f = open("tictactoe/results2/starter.txt", "r")
+f = open("nimmt/result4/starter.txt", "r")
 text = f.read()
 historywon = list(map(float, text[1:-1].split(", ")))
 N = 1

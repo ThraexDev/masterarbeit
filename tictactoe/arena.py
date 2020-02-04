@@ -34,7 +34,7 @@ class Counter(dict):
 
 results = Counter()
 
-for test_number in range(0, 10000):
+for test_number in range(0, 100):
     print(test_number)
     board = Board()
     player0 = Player(model, 0)

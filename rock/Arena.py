@@ -74,10 +74,10 @@ for test_number in range(0, 100):
 print(won_games)
 print('--------')
 for recorded_move in recorded_moves:
-    print('average number on card played: '+str(sum(recorded_move)/(100*playeramount)))
+    print('average card: '+str(sum(recorded_move)/(100*playeramount)))
 print('--------')
 for recorded_bull in recorded_bulls:
-    print('average bulls per player: '+str(sum(recorded_bull)/(100*playeramount)))
+    print('average bull: '+str(sum(recorded_bull)/(100*playeramount)))
 print('--------')
 for recorded_batch in recorded_batch_length:
     print('average batch length: '+str(sum(recorded_batch)/(100*amountofbatches)))
