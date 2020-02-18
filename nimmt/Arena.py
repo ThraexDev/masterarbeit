@@ -3,6 +3,8 @@ import tensorflow as tf
 
 from nimmt.Board import Board
 from nimmt.Player import Player
+from nimmt.TestPlayer import TestPlayer
+from nimmt.TestPlayer2 import TestPlayer2
 
 cardshandedtoeachplayer = 10
 playeramount = 3
@@ -47,7 +49,7 @@ for test_number in range(0, 100):
         if player_number == 0:
             players.append(Player(new_model, player_number))
         else:
-            players.append(Player(old_model, player_number))
+            players.append(TestPlayer(player_number))
     game_not_finished = True
     move_number = 0
     while game_not_finished:

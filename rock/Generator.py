@@ -24,7 +24,7 @@ model.compile(optimizer='Adam',
                    metrics=['accuracy'])
 
 game_history_starter = []
-game_history_no_starter = []
+game_history_stirling = []
 
 class GameStateGenerator(tf.compat.v2.keras.utils.Sequence):
     def __init__(self, tfmodel):
@@ -70,9 +70,9 @@ class GameStateGenerator(tf.compat.v2.keras.utils.Sequence):
                 selected_moves.append(sterling_move)
                 board.add_move(selected_moves)
             game_feedback = board.get_feedback_for_player(0)
-            game_history_starter.append(game_feedback)
+            game_history_stirling.append(game_feedback)
             f = open("result/stirling.txt", "w")
-            f.write(str(game_history_starter))
+            f.write(str(game_history_stirling))
             f.close()
 
         board = Board()

@@ -28,9 +28,9 @@ class Board:
 
     def get_feedback_for_player(self, player_number: int) -> int:
         if player_number == 0:
-            return self.player_0_wins
+            return self.player_0_wins - self.player_1_wins
         if player_number == 1:
-            return self.player_1_wins
+            return self.player_1_wins - self.player_0_wins
 
     def get_correct_move_for(self, player_number: int) -> int:
         vector = [0] * 3
