@@ -1,9 +1,5 @@
-import random
-
 import tensorflow as tf
 import numpy as np
-import matplotlib.pyplot as plt
-from operator import add
 
 from rock.Board import Board
 from rock.Player import Player
@@ -24,6 +20,9 @@ model.compile(optimizer='Adam',
                    metrics=['accuracy'])
 
 game_history_starter = []
+game_history_win = []
+game_history_loss = []
+game_history_draw = []
 game_history_stirling = []
 
 class GameStateGenerator(tf.compat.v2.keras.utils.Sequence):
@@ -70,9 +69,24 @@ class GameStateGenerator(tf.compat.v2.keras.utils.Sequence):
                 selected_moves.append(sterling_move)
                 board.add_move(selected_moves)
             game_feedback = board.get_feedback_for_player(0)
+            wins = board.get_feedback_win()
+            losses = board.get_feedback_loss()
+            draws = board.get_feedback_draw()
             game_history_stirling.append(game_feedback)
+            game_history_win.append(wins)
+            game_history_loss.append(losses)
+            game_history_draw.append(draws)
             f = open("result/stirling.txt", "w")
             f.write(str(game_history_stirling))
+            f.close()
+            f = open("result/wins.txt", "w")
+            f.write(str(game_history_win))
+            f.close()
+            f = open("result/loss.txt", "w")
+            f.write(str(game_history_loss))
+            f.close()
+            f = open("result/draw.txt", "w")
+            f.write(str(game_history_draw))
             f.close()
 
         board = Board()

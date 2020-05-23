@@ -6,11 +6,11 @@ from nimmt.Player import Player
 
 cardshandedtoeachplayer = 10
 playeramount = 3
-cardamount = 61
+cardamount = 104
 amountofbatches = 3
 maxbatchcards = 5
 
-input_layer = tf.keras.Input(shape=(435,), name='input')
+input_layer = tf.keras.Input(shape=(650,), name='input')
 allowed_moves = tf.keras.Input(shape=(cardamount*amountofbatches,), name='allow')
 big_layer = tf.keras.layers.Dense(800, activation=tf.nn.tanh, name='big')(input_layer)
 middle = tf.keras.layers.Dense(200, activation=tf.nn.tanh, name='middle')(big_layer)
@@ -25,7 +25,7 @@ model = tf.keras.Model(inputs=[input_layer, allowed_moves],
 model.compile(optimizer='Adam',
                    loss=[tf.keras.losses.categorical_crossentropy, tf.compat.v2.losses.mean_squared_error, tf.keras.losses.categorical_crossentropy],
                    metrics=['accuracy'])
-model.load_weights("result4/model10000")
+model.load_weights("resultfinal/model10000")
 
 board = Board(cardshandedtoeachplayer, playeramount, cardamount, amountofbatches, maxbatchcards)
 players = []

@@ -17,7 +17,7 @@ model = tf.keras.Model(inputs=[input_layer, allowed_moves],
 model.compile(optimizer='Adam',
                    loss=[tf.keras.losses.categorical_crossentropy, tf.compat.v2.losses.mean_squared_error],
                    metrics=['accuracy'])
-model.load_weights("results2/model64000")
+model.load_weights("resultsfinal/model20000")
 
 ai_player = Player(model, 0)
 board = Board()

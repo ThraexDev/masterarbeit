@@ -1,9 +1,5 @@
-import random
-
 import tensorflow as tf
 import numpy as np
-import matplotlib.pyplot as plt
-from operator import add
 
 from tictactoe.Board import Board
 from tictactoe.Player import Player
@@ -28,25 +24,34 @@ model.compile(optimizer='Adam',
 
 game_history_starter = []
 game_history_no_starter = []
+history_wins = []
+history_losses = []
+history_draws = []
+history_wins_no_starter = []
+history_losses_no_starter = []
+history_draws_no_starter = []
 
 class GameStateGenerator(tf.compat.v2.keras.utils.Sequence):
     def __init__(self, tfmodel):
         self.model = tfmodel
 
     def __len__(self):
-        return 100001
+        return 20001
 
     def __getitem__(self, item):
-        if item % 1000 == 0:
-            model.save_weights("results2/model" + str(item))
+        if item % 100 == 0:
+            model.save_weights("resultsfinal/model" + str(item))
             won_games = 0
-            for test_number in range(0, 10):
+            wins = 0
+            losses = 0
+            draws = 0
+            for test_number in range(0, 100):
                 board = Board()
                 player0 = Player(model, 1)
                 player1 = TestPlayer(0)
                 game_not_finished = True
                 game_feedback = 0
-                ai_0_plays = True
+                ai_0_plays = False
                 while game_not_finished:
                     ai_0_plays = not ai_0_plays
                     if ai_0_plays:
@@ -59,14 +64,35 @@ class GameStateGenerator(tf.compat.v2.keras.utils.Sequence):
                                                                                int(np.random.choice(9, p=move_probability)))
                 if ai_0_plays:
                     won_games = won_games + game_feedback
+                    if game_feedback == 1:
+                        wins = wins + 1
                 else:
                     won_games = won_games - game_feedback
+                    if game_feedback == 1:
+                        losses = losses + 1
+                if game_feedback == 0:
+                    draws = draws + 1
             game_history_no_starter.append(won_games)
-            f = open("results2/nostarter.txt", "w")
+            history_wins_no_starter.append(wins)
+            history_losses_no_starter.append(losses)
+            history_draws_no_starter.append(draws)
+            f = open("resultsfinal/nostarter.txt", "w")
             f.write(str(game_history_no_starter))
             f.close()
+            f = open("resultsfinal/wins_no_starter.txt", "w")
+            f.write(str(history_wins_no_starter))
+            f.close()
+            f = open("resultsfinal/losses_no_starter.txt", "w")
+            f.write(str(history_losses_no_starter))
+            f.close()
+            f = open("resultsfinal/draws_no_starter.txt", "w")
+            f.write(str(history_draws_no_starter))
+            f.close()
             won_games = 0
-            for test_number in range(0, 10):
+            wins = 0
+            losses = 0
+            draws = 0
+            for test_number in range(0, 100):
                 board = Board()
                 player0 = Player(model, 0)
                 player1 = TestPlayer(1)
@@ -85,11 +111,29 @@ class GameStateGenerator(tf.compat.v2.keras.utils.Sequence):
                                                                                int(np.random.choice(9, p=move_probability)))
                 if ai_0_plays:
                     won_games = won_games + game_feedback
+                    if game_feedback == 1:
+                        wins = wins + 1
                 else:
                     won_games = won_games - game_feedback
+                    if game_feedback == 1:
+                        losses = losses + 1
+                if game_feedback == 0:
+                    draws = draws + 1
             game_history_starter.append(won_games)
-            f = open("results2/starter.txt", "w")
+            history_wins.append(wins)
+            history_losses.append(losses)
+            history_draws.append(draws)
+            f = open("resultsfinal/starter.txt", "w")
             f.write(str(game_history_starter))
+            f.close()
+            f = open("resultsfinal/wins_starter.txt", "w")
+            f.write(str(history_wins))
+            f.close()
+            f = open("resultsfinal/losses_starter.txt", "w")
+            f.write(str(history_losses))
+            f.close()
+            f = open("resultsfinal/draws_starter.txt", "w")
+            f.write(str(history_draws))
             f.close()
         board = Board()
         player0 = Player(model, 0)
@@ -121,11 +165,9 @@ class GameStateGenerator(tf.compat.v2.keras.utils.Sequence):
         if ai_0_plays:
             win_probabilities_player0 = [[game_feedback]] * len(training_input_player0)
             win_probabilities_player1 = [[0.0-game_feedback]] * len(training_input_player1)
-            #move_probabilities_player1 = [[0.0001] * 9] * len(training_input_player1)
         else:
             win_probabilities_player0 = [[0.0-game_feedback]] * len(training_input_player0)
             win_probabilities_player1 = [[game_feedback]] * len(training_input_player1)
-            #move_probabilities_player0 = [[0.0001] * 9] * len(training_input_player0)
         final_input = []
         final_allow = []
         final_move = []

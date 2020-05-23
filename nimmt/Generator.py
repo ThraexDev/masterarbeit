@@ -1,24 +1,20 @@
-import random
-
 import tensorflow as tf
 import numpy as np
-import matplotlib.pyplot as plt
-from operator import add
 
 from nimmt.Board import Board
 from nimmt.Player import Player
-from nimmt.TestPlayer import TestPlayer
+from nimmt.TestPlayer2 import TestPlayer2
 
 print("Num GPUs Available: ", tf.config.experimental.list_physical_devices())
 print(tf.test.is_gpu_available())
 
 cardshandedtoeachplayer = 10
 playeramount = 3
-cardamount = 61
+cardamount = 104
 amountofbatches = 3
 maxbatchcards = 5
 
-input_layer = tf.keras.Input(shape=(435,), name='input')
+input_layer = tf.keras.Input(shape=(650,), name='input')
 allowed_moves = tf.keras.Input(shape=(cardamount*amountofbatches,), name='allow')
 big_layer = tf.keras.layers.Dense(800, activation=tf.nn.tanh, name='big')(input_layer)
 middle = tf.keras.layers.Dense(200, activation=tf.nn.tanh, name='middle')(big_layer)
@@ -42,20 +38,20 @@ class GameStateGenerator(tf.compat.v2.keras.utils.Sequence):
         self.model = tfmodel
 
     def __len__(self):
-        return 10001
+        return 20001
 
     def __getitem__(self, item):
         if item % 100 == 0:
-            model.save_weights("result4/model" + str(item))
+            model.save_weights("resultfinal/model" + str(item))
             won_games = 0
-            for test_number in range(0, 10):
+            for test_number in range(0, 100):
                 board = Board(cardshandedtoeachplayer, playeramount, cardamount, amountofbatches, maxbatchcards)
                 players = []
                 for player_number in range(0, playeramount):
                     if player_number == 0:
                         players.append(Player(model, player_number))
                     else:
-                        players.append(TestPlayer(player_number))
+                        players.append(TestPlayer2(player_number))
                 game_not_finished = True
                 while game_not_finished:
                     selected_moves = []
@@ -68,7 +64,7 @@ class GameStateGenerator(tf.compat.v2.keras.utils.Sequence):
                 game_feedback = board.get_feedback_for_player(0)
                 won_games = won_games + game_feedback
             game_history_starter.append(won_games)
-            f = open("result4/starter.txt", "w")
+            f = open("resultfinal/starter.txt", "w")
             f.write(str(game_history_starter))
             f.close()
         board = Board(cardshandedtoeachplayer, playeramount, cardamount, amountofbatches, maxbatchcards)

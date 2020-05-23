@@ -1,9 +1,5 @@
-import random
-
 import tensorflow as tf
 import numpy as np
-import matplotlib.pyplot as plt
-from operator import add
 
 from tictactoe.Board import Board
 from tictactoe.Player import Player
@@ -25,7 +21,7 @@ model = tf.keras.Model(inputs=[input_layer, allowed_moves],
 model.compile(optimizer='Adam',
                    loss=[tf.keras.losses.categorical_crossentropy, tf.compat.v2.losses.mean_squared_error],
                    metrics=['accuracy'])
-model.load_weights('results2/model64000')
+model.load_weights('resultsfinal/model20000')
 
 class Counter(dict):
     def __missing__(self, key):
@@ -34,7 +30,10 @@ class Counter(dict):
 
 results = Counter()
 
-for test_number in range(0, 100):
+won = 0
+lost = 0
+draw = 0
+for test_number in range(0, 1000):
     print(test_number)
     board = Board()
     player0 = Player(model, 0)
@@ -42,6 +41,7 @@ for test_number in range(0, 100):
     game_not_finished = True
     ai_0_plays = False
     result = ''
+    game_feedback = -1
     while game_not_finished:
         ai_0_plays = not ai_0_plays
         if ai_0_plays:
@@ -55,10 +55,19 @@ for test_number in range(0, 100):
             result = result + str(move) + '-'
             game_feedback, game_not_finished = board.add_move(player1.get_player_number(), move)
     if ai_0_plays:
-        result = result + 'won'
+        if game_feedback == 1:
+            result = result + 'won'
+            won = won + 1
+        else:
+            result = result + 'draw'
+            draw = draw + 1
     else:
         result = result + 'lost'
+        lost = lost + 1
     results[result] += 1
 
 for x in results:
   print(x + ': ' + str(results[x]))
+print(won)
+print(draw)
+print(lost)
