@@ -5,7 +5,7 @@ Please download the Python here: https://www.python.org/downloads/release/python
 The Tensorflow library is required to run any of the files. Please download Tensorflow here: https://www.tensorflow.org/install, or install it via pip or conda.
 For this project Tensorflow 2.0 was used. It is important to download a 2.x version.
 
-To avoid to long training sessions, please make sure that Tensorflow has access to your GPU: https://www.tensorflow.org/guide/gpu. This is not necessary but will save a lot of time.
+To avoid long training sessions, please make sure that Tensorflow has access to your GPU: https://www.tensorflow.org/guide/gpu. This is not necessary but will save a lot of time.
 ## How to use
 Before any statistics or plots can be generated, an AlphaZero model needs to be created.
 To create an AlphaZero model, go to the folder of the game and execute the Generator.py with
